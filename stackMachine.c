@@ -3,17 +3,18 @@
 #include "stackMachine.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int sp = MAX_DATASTACK_HEIGHT;
 int bp = 0;
 int pc = 0;
-int ir = 0;
+struct instruction* ir = 0;
 int gp = -1;
-int[] stack = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
-instruction* text = malloc(MAX_CODE_LENGTH * sizeof(instruction));
+int stack[MAX_DATASTACK_HEIGHT] = {};
+struct instruction code[MAX_CODE_LENGTH] = {};
 
 
-int main() {
+int main(int argc, char *argv[]) {
 
     return 1;
 }
@@ -65,10 +66,10 @@ void add() {
 void sub() {
 
 }
-void mult() {
+void multiply() {
 
 }
-void div() {
+void divide() {
 
 }
 void odd() {

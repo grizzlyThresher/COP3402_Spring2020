@@ -2,11 +2,11 @@
 #define MAX_CODE_LENGTH  500
 #define MAX_LEXI_LEVELS  3
 //struct used to organize instructions
-struct{
+struct instruction{
     int op;
     int l;
     int m;
-}instruction;
+};
 //Functions for each ISA input
 void literal(int val);
 void operation(int op);
@@ -24,8 +24,8 @@ void ret();
 void negate();
 void add();
 void sub();
-void mult();
-void div();
+void multiply();
+void divide();
 void odd();
 void mod();
 void equal();
