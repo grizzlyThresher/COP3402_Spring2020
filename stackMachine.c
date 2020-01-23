@@ -12,6 +12,7 @@ struct instruction* ir = 0;
 int gp = -1;
 int stack[MAX_DATASTACK_HEIGHT] = {};
 struct instruction code[MAX_CODE_LENGTH] = {};
+int halt = 1;
 int numLines = 0;
 
 
@@ -23,32 +24,46 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
-	int tmpNum = 0;
-	int numCnt = 1;
-	//reads in from file 1 at a time while keeping track of position and 
-	//line number. 
-	while(fscanf(file, "%d", &tmpNum)==1) {
-		if(numLines >= MAX_CODE_LENGTH) {
-			printf("Program too long for machine to run.");
-			return 0;
-		}
-		if(numCnt % 3 == 1) {
-			code[numLines].op = tmpNum;
-		} else if(numCnt % 3 == 2) {
-			code[numLines].l = tmpNum;
-		} else {
-			code[numLines].m = tmpNum;
-				numLines++;
-				numCnt=0;
-		}
-		numCnt++;
+	if(readInstructions(file) == 1) {
+		printf("Program too long for machine to run.");
+		return 0;
 	}
 	printInstructions();
+
+	printf("\n\n                   gp    pc    bp    sp    data                     stack\n");
+	printf("Initial values     %d    %d     %d     %d    \n\n",gp,pc,bp,sp);
+
+	while(halt==1) {
+		// Fetch
+		ir = &code[pc];
+		// Execute
+		switch (ir->op) {
+			case 1:
+				literal(ir->m);
+			case 2:
+				operation(ir->m);
+			case 3:
+				load(ir->l, ir->m);
+			case 4:
+				store(ir->l, ir->m);
+			case 5:
+				call(ir->l, ir->m);
+			case 6:
+				inc(ir->m);
+			case 7:
+				jump(ir->m);
+			case 8:
+				jmpIfZero(ir->m);
+			case 9:
+				sysOp(ir->m);
+		}
+		printState(pc++);
+	}
 
     return 0;
 }
 
-//Functions for each ISA input
+// Methods for each ISA input
 void literal(int val) {
 
 }
@@ -73,6 +88,17 @@ void jump(int loc) {
 void jmpIfZero(int loc) {
 
 }
+void sysOp(int op) {
+	switch (op) {
+		case 1:
+			write();
+		case 2:
+			read();
+		case 3:
+			end();
+	}
+}
+// Methods for each System Operation
 void write() {
 
 }
@@ -80,9 +106,9 @@ void read() {
 
 }
 void end() {
-
+	halt = 0;
 }
-//Functions for each Op code for operation()
+// Methods for each Op code for operation()
 void ret() {
 
 }
@@ -125,13 +151,61 @@ void greater() {
 void greaterOrEqual() {
 
 }
-// method to make printing of Instructions easier
+// Method to separate the reading of the instructions from the rest of main
+int readInstructions(FILE* file) {
+
+	int tmpNum = 0;
+	int numCnt = 1;
+	//reads in from file 1 at a time while keeping track of position and 
+	//line number. 
+	while(fscanf(file, "%d", &tmpNum)==1) {
+		if(numLines >= MAX_CODE_LENGTH) 
+			return 1;
+		
+		if(numCnt % 3 == 1) {
+			code[numLines].op = tmpNum;
+		} else if(numCnt % 3 == 2) {
+			code[numLines].l = tmpNum;
+		} else {
+			code[numLines].m = tmpNum;
+				numLines++;
+				numCnt=0;
+		}
+		numCnt++;
+	}
+	return 0;
+}
+
+char* oper[] = {"lit","opr","lod","sto","cal","inc","jmp","jpc","sio"};
+// Method to make printing of Instructions easier
 void printInstructions() {
 	//String array to translate from input number to corresponding operation 
-	char* op[] = {"lit","opr","lod","sto","cal","inc","jmp","jpc","sio","sio","sio"};
 	printf("Line    Op    L    M \n");
 	for(int i = 0; i < numLines; i++) {
-		printf("%d       %s   %d    %d \n", i, op[code[i].op - 1], code[i].l, code[i].m);
+		printf("%d       %s   %d    %d \n", i, oper[code[i].op - 1], code[i].l, code[i].m);
 	}
 
+}
+// Method used to print current state of the machine
+void printState(int curLoc) {
+	printf("%d %s %d %d          %d    %d     %d     %d    ",curLoc,oper[(ir->op)-1],ir->l,ir->m,gp,pc,bp,sp);
+	for(int i = 0; i <= gp; i++) {
+		printf("%d", stack[i]);
+	}
+    for(int i = gp+1; i < sp; i++) {
+        printf(" ");
+    }
+    for(int i = sp; i < MAX_DATASTACK_HEIGHT; i++) {
+        printf("%d", stack[i]);
+    }
+    printf("\n");
+
+}
+// Method used to redefine base in terms of requested lexicographical level
+int base(int l, int base) {
+	int b1 = base;
+	while (l-- > 0) {
+		b1 = stack[b1 - 1];
+	}
+	return b1;
 }
