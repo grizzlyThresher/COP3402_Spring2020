@@ -34,3 +34,5 @@ void less();
 void lessOrEqual();
 void greater();
 void greaterOrEqual();
+// method to make printing of Instructions easier
+void printInstructions();
