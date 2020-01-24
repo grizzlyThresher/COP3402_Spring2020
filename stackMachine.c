@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define TESTING
 
 int sp = MAX_DATASTACK_HEIGHT;
 int bp = 0;
@@ -28,36 +29,58 @@ int main(int argc, char *argv[]) {
 		printf("Program too long for machine to run.");
 		return 0;
 	}
+    // Will only print the instructions and stack trace while testing the VM
+    // Avoids messiness for actual use of the machine.
+    #ifdef TESTING
 	printInstructions();
-
 	printf("\n\n                   gp    pc    bp    sp    data                     stack\n");
 	printf("Initial values     %d    %d     %d     %d    \n\n",gp,pc,bp,sp);
+    #endif
+    int tmpPc = pc;
 
 	while(halt==1) {
 		// Fetch
 		ir = &code[pc];
+        tmpPc = pc;
 		// Execute
 		switch (ir->op) {
 			case 1:
 				literal(ir->m);
+                break;
 			case 2:
 				operation(ir->m);
+                break;
 			case 3:
 				load(ir->l, ir->m);
+                break;
 			case 4:
 				store(ir->l, ir->m);
+                break;
 			case 5:
 				call(ir->l, ir->m);
+                break;
 			case 6:
 				inc(ir->m);
+                break;
 			case 7:
 				jump(ir->m);
+                break;
 			case 8:
 				jmpIfZero(ir->m);
+                break;
 			case 9:
 				sysOp(ir->m);
+                break;
+            default:
+                printf("Error: Invalid Operation.\n");
+                halt = 0;
+                break;
 		}
-		printState(pc++);
+
+        // Only prints the stack trace while testing the VM
+        #ifdef TESTING
+		printState(tmpPc);
+        #endif
 	}
 
     return 0;
@@ -65,38 +88,70 @@ int main(int argc, char *argv[]) {
 
 // Methods for each ISA input
 void literal(int val) {
-
+    if (base(0,bp) == 0) {
+        gp++;
+        stack[gp] = val;
+    } else {
+        if (sp - 1 == gp) {
+            printf("Error: Stack Overflow\n");
+            halt = 0;
+        }
+        sp--;
+        stack[sp] = val;
+    }
+    pc++;
 }
 void operation(int op) {
 
+    pc++;
 }
 void load(int lex, int offset) {
 
+    pc++;
 }
 void store(int lex, int offset) {
 
+    pc++;
 }
 void call(int lex, int index) {
 
 }
 void inc(int numLocals) {
-
+    if (base(0,bp) == 0) {
+        gp += numLocals;
+    } else {
+        if (sp - numLocals <= gp) {
+            printf("Error: Stack Overflow\n");
+        }
+        sp -= numLocals;
+    }
+    pc++;
 }
 void jump(int loc) {
+    pc = loc;
 
 }
 void jmpIfZero(int loc) {
+    pc++;
 
 }
 void sysOp(int op) {
 	switch (op) {
 		case 1:
 			write();
+            break;
 		case 2:
 			read();
+            break;
 		case 3:
 			end();
+            break;
+        default:
+            printf("Error: Invalid System Operation.\n");
+            halt = 0;
+            break;
 	}
+    pc++;
 }
 // Methods for each System Operation
 void write() {
@@ -188,7 +243,7 @@ void printInstructions() {
 }
 // Method used to print current state of the machine
 void printState(int curLoc) {
-	printf("%d %s %d %d          %d    %d     %d     %d    ",curLoc,oper[(ir->op)-1],ir->l,ir->m,gp,pc,bp,sp);
+	printf("%d %s %d %d          %d     %d     %d     %d    ",curLoc,oper[(ir->op)-1],ir->l,ir->m,gp,pc,bp,sp);
 	for(int i = 0; i <= gp; i++) {
 		printf("%d", stack[i]);
 	}
