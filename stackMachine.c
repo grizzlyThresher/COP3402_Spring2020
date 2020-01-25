@@ -163,17 +163,30 @@ void store(int lex, int offset) {
 
     
 }
-void call(int lex, int index) {
+void call(int lex, int loc) {
+    if (sp - 4 <= gp) {
+        printf("Error: Stack Overflow.\n");
+    } else {
+        stack[sp - 1] = 0;
+        stack[sp - 2] = base(lex, bp);
+        stack[sp - 3] = bp;
+        stack[sp - 4] = pc;
+        bp = sp - 1;
+        // Subtracts 1 to offset global pc increment
+        pc = loc - 1;
+    }
 
 }
 void inc(int numLocals) {
-    if (base(0,bp) == 0) {
+    if (bp == 0) {
         gp += numLocals;
     } else {
         if (sp - numLocals <= gp) {
-            printf("Error: Stack Overflow\n");
+            printf("Error: Stack Overflow.\n");
+            halt = 0;
+        } else {
+            sp -= numLocals;
         }
-        sp -= numLocals;
     }
     
 }
@@ -301,11 +314,16 @@ void printState(int curLoc) {
 	for(int i = 0; i <= gp; i++) {
 		printf("%d", stack[i]);
 	}
-    for(int i = gp+1; i < sp; i++) {
-        printf(" ");
-    }
-    for(int i = sp; i < MAX_DATASTACK_HEIGHT; i++) {
-        printf("%d", stack[i]);
+    if (sp < MAX_DATASTACK_HEIGHT) {
+
+        printf("|");
+
+        for(int i = gp+1; i < sp; i++) {
+            printf(" ");
+        }
+        for(int i = sp; i < MAX_DATASTACK_HEIGHT; i++) {
+            printf("%d", stack[i]);
+        }
     }
     printf("\n");
 
