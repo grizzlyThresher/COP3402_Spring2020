@@ -77,6 +77,9 @@ int main(int argc, char *argv[]) {
                 break;
 		}
 
+        // Increments the Program Counter
+        pc++;
+        
         // Only prints the stack trace while testing the VM
         #ifdef TESTING
 		printState(tmpPc);
@@ -99,19 +102,66 @@ void literal(int val) {
         sp--;
         stack[sp] = val;
     }
-    pc++;
+    
 }
 void operation(int op) {
-
-    pc++;
+    switch (op) {
+        case 0:
+            ret();
+            break;
+        case 1:
+            negate();
+            break;
+        case 2:
+            add();
+            break;
+        case 3:
+            sub();
+            break;
+        case 4:
+            multiply();
+            break;
+        case 5:
+            divide();
+            break;
+        case 6:
+            odd();
+            break;
+        case 7:
+            mod();
+            break;
+        case 8:
+            equal();
+            break;
+        case 9:
+            notEqual();
+            break;
+        case 10:
+            less();
+            break;
+        case 11:
+            lessOrEqual();
+            break;
+        case 12:
+            greater();
+            break;
+        case 13:
+            greaterOrEqual();
+            break;
+        default:
+            printf("Error: Invalid Operation.\n");
+            halt = 0;
+            break;
+    }
+    
 }
 void load(int lex, int offset) {
 
-    pc++;
+    
 }
 void store(int lex, int offset) {
 
-    pc++;
+    
 }
 void call(int lex, int index) {
 
@@ -125,14 +175,16 @@ void inc(int numLocals) {
         }
         sp -= numLocals;
     }
-    pc++;
+    
 }
 void jump(int loc) {
     pc = loc;
 
+    // Decrements pc to counteract global increment to pc
+    pc--;
 }
 void jmpIfZero(int loc) {
-    pc++;
+    
 
 }
 void sysOp(int op) {
@@ -151,7 +203,7 @@ void sysOp(int op) {
             halt = 0;
             break;
 	}
-    pc++;
+    
 }
 // Methods for each System Operation
 void write() {
@@ -231,6 +283,7 @@ int readInstructions(FILE* file) {
 	return 0;
 }
 
+#ifdef TESTING
 char* oper[] = {"lit","opr","lod","sto","cal","inc","jmp","jpc","sio"};
 // Method to make printing of Instructions easier
 void printInstructions() {
@@ -256,6 +309,8 @@ void printState(int curLoc) {
     printf("\n");
 
 }
+#endif
+
 // Method used to redefine base in terms of requested lexicographical level
 int base(int l, int base) {
 	int b1 = base;
