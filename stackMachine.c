@@ -33,8 +33,8 @@ int main(int argc, char *argv[]) {
     // Avoids messiness for actual use of the machine.
     #ifdef TESTING
 	printInstructions();
-	printf("\n\n                   gp    pc    bp    sp    data                     stack\n");
-	printf("Initial values     %d    %d     %d     %d    \n\n",gp,pc,bp,sp);
+	printf("\n\n                      gp    pc    bp    sp    data               stack\n");
+	printf("Initial values        %d    %d     %d     %d    \n\n",gp,pc,bp,sp);
     #endif
     int tmpPc = pc;
 
@@ -310,7 +310,22 @@ void printInstructions() {
 }
 // Method used to print current state of the machine
 void printState(int curLoc) {
-	printf("%d %s %d %d          %d     %d     %d     %d    ",curLoc,oper[(ir->op)-1],ir->l,ir->m,gp,pc,bp,sp);
+
+    char buffer[6] = {};
+    // Prints out the current state with spacing determined by the number of digits
+    // in the associated values.
+    makeBuffer(buffer, curLoc, 3);
+    printf("%d%s", curLoc, buffer);
+    makeBuffer(buffer, gp, 6);
+    printf("%s  %d  %d          %d%s", oper[(ir->op)-1], ir->l, ir->m, gp, buffer);
+    makeBuffer(buffer, pc, 6);
+    printf("%d%s", pc, buffer);
+    makeBuffer(buffer, bp, 6);
+    printf("%d%s", bp, buffer);
+    makeBuffer(buffer, sp, 6);
+    printf("%d%s", sp, buffer);
+
+    // Prints out the current state of the data-stack
 	for(int i = 0; i <= gp; i++) {
 		printf("%d", stack[i]);
 	}
@@ -328,6 +343,24 @@ void printState(int curLoc) {
     printf("\n");
 
 }
+
+// Method used for formatting in the event a value requires 2 digits.
+// maxSize should always be <= max size of str.
+void makeBuffer(char *str, int num, int maxSize) {
+
+    int offset;
+    if (num / 10 > 0 || num < 0) {
+        offset = maxSize - 2;   
+    } else {
+        offset = maxSize - 1;
+    }
+
+    for(int i = 0; i < offset; i++) {
+            str[i] = ' ';
+        }
+        str[offset] = '\0';
+}
+
 #endif
 
 // Method used to redefine base in terms of requested lexicographical level

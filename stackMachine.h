@@ -43,5 +43,7 @@ int readInstructions(FILE* file);
 void printInstructions();
 // Method used to print current state of the machine
 void printState(int curLoc);
+// Method used for formatting in the event a value requires 2 digits.
+void makeBuffer(char *str, int num, int maxSize);
 // Method used to redefine base
 int base(int l, int base);
