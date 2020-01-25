@@ -96,7 +96,7 @@ void literal(int val) {
         stack[gp] = val;
     } else {
         if (sp - 1 == gp) {
-            printf("Error: Stack Overflow\n");
+            printf("Error: Stack Overflow.\n");
             halt = 0;
         }
         sp--;
@@ -178,14 +178,15 @@ void inc(int numLocals) {
     
 }
 void jump(int loc) {
-    pc = loc;
-
-    // Decrements pc to counteract global increment to pc
-    pc--;
+    // Subtracts 1 to offset global pc increment
+    pc = loc - 1;
 }
 void jmpIfZero(int loc) {
-    
-
+    if(stack[sp] == 0) {
+        // Subtracts 1 to offset global pc increment
+        pc = loc - 1;
+    }
+    sp++;
 }
 void sysOp(int op) {
 	switch (op) {
