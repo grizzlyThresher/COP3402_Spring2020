@@ -1,11 +1,14 @@
 FDIR = pMachineSRC
+TDIR = Tests
 _SRC = pMachine.c
 _DEPS = pMachine.h
+_TEST = "test.txt"
 PROG = pMachine
-TEST = "test.txt"
+
 
 DEPS = $(patsubst %,$(FDIR)/%,$(_DEPS))
 SRC = $(patsubst %,$(FDIR)/%,$(_SRC))
+TEST = $(patsubst %,$(TDIR)/%,$(_TEST))
 OBJ = $(SRC:%.c=%.o)
 EX = $(patsubst %, ./%, $(PROG))
 
