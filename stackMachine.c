@@ -47,6 +47,7 @@ int main(int argc, char *argv[]) {
 		ir = &code[pc];
         tmpPc = pc;
 		// Execute
+        // sysOp is repeated intentionally to comply with specs given in the HW file.
 		switch (ir->op) {
 			case 1:
 				literal(ir->r, ir->m);
@@ -76,42 +77,48 @@ int main(int argc, char *argv[]) {
 				sysOp(ir->r, ir->m);
                 break;
             case 10:
-                negate(ir->r, ir->m);
+                sysOp(ir->r, ir->m);
                 break;
             case 11:
-                add(ir->r, ir->l, ir->m);
+                sysOp(ir->r, ir->m);
                 break;
             case 12:
-                sub(ir->r, ir->l, ir->m);
+                negate(ir->r, ir->m);
                 break;
             case 13:
-                multiply(ir->r, ir->l, ir->m);
+                add(ir->r, ir->l, ir->m);
                 break;
             case 14:
-                divide(ir->r, ir->l, ir->m);
+                sub(ir->r, ir->l, ir->m);
                 break;
             case 15:
-                odd(ir->r, ir->m);
+                multiply(ir->r, ir->l, ir->m);
                 break;
             case 16:
-                mod(ir->r, ir->l, ir->m);
+                divide(ir->r, ir->l, ir->m);
                 break;
             case 17:
-                equal(ir->r, ir->l, ir->m);
+                odd(ir->r, ir->m);
                 break;
             case 18:
-                notEqual(ir->r, ir->l, ir->m);
+                mod(ir->r, ir->l, ir->m);
                 break;
             case 19:
-                less(ir->r, ir->l, ir->m);
+                equal(ir->r, ir->l, ir->m);
                 break;
             case 20:
-                lessOrEqual(ir->r, ir->l, ir->m);
+                notEqual(ir->r, ir->l, ir->m);
                 break;
             case 21:
-                greater(ir->r, ir->l, ir->m);
+                less(ir->r, ir->l, ir->m);
                 break;
             case 22:
+                lessOrEqual(ir->r, ir->l, ir->m);             
+                break;
+                case 23:
+                greater(ir->r, ir->l, ir->m);
+                break;
+            case 24:
                 greaterOrEqual(ir->r, ir->l, ir->m);
                 break;
             default:
@@ -286,7 +293,9 @@ int readInstructions(FILE* file) {
 }
 
 #ifdef DISPLAY
-char* oper[] = {"lit","opr","lod","sto","cal","inc","jmp","jpc","sio"};
+char* oper[] = {"lit","opr","lod","sto","cal","inc","jmp","jpc","sio", "sio",
+ "sio", "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq", "lss",
+ "leq", "gtr", "geq"};
 // Method to make printing of Instructions easier
 void printInstructions() {
 	//String array to translate from input number to corresponding operation 
