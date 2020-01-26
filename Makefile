@@ -1,6 +1,6 @@
 SRC = $(wildcard *.c)
 OBJ = $(SRC:%.c=%.o)
-PROG = stackMachine
+PROG = pMachine
 
 .PHONY: all clean
 
