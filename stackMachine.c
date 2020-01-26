@@ -15,7 +15,11 @@ struct instruction code[MAX_CODE_LENGTH] = {};
 int registerFile[NUM_REGISTERS] = {};
 int halt = 1;
 int numLines = 0;
-
+// Array used to keep track of the end of any activation records.
+// Used exclusively for printing purposes.
+#ifdef DISPLAY
+    int endOfRecord[MAX_DATASTACK_HEIGHT] = {};
+#endif
 
 int main(int argc, char *argv[]) {
 
@@ -147,6 +151,7 @@ void store(int reg, int lex, int offset) {
 void call(int lex, int loc) {
     if (sp + 4 >= MAX_DATASTACK_HEIGHT) {
         printf("Error: Stack Overflow.\n");
+        halt = 1;
     } else {
         stack[sp + 1] = 0;
         stack[sp + 2] = base(lex, bp);
@@ -155,6 +160,10 @@ void call(int lex, int loc) {
         bp = sp + 1;
         // Subtracts 1 to offset global pc increment
         pc = loc - 1;
+
+        #ifdef DISPLAY
+        endOfRecord[sp] = 1;
+        #endif
     }
 
 }
@@ -315,7 +324,11 @@ void printState(int curLoc) {
     printf("\nStack: ");
     // Prints out the current state of the data-stack
 	for (int i = 0; i <= sp; i++) {
-        printf("%d ", stack[i]);
+        if (endOfRecord[i] == 1 && sp != i) {
+            printf("%d | ", stack[i]);
+        } else {
+            printf("%d ", stack[i]);
+        }
     }
     printf("\n\n");
 }
