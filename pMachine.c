@@ -40,9 +40,10 @@ int main(int argc, char *argv[]) {
 	printf("\n\n                          pc    bp    sp    registers\n");
 	printf("Initial values:           %d     %d     %d    0  0  0  0  0  0  0\n\n",pc,bp,sp);
     #endif
+
     int tmpPc = pc;
 
-	while(halt==1) {
+	while(halt == 1) {
 		// Fetch
 		ir = &code[pc];
         tmpPc = pc;
@@ -130,7 +131,7 @@ int main(int argc, char *argv[]) {
         // Increments the Program Counter
         pc++;
         
-        // Only prints the stack trace while DISPLAY the VM
+        // Only prints the stack trace while the VM is in DISPLAY mode
         #ifdef DISPLAY
 		printState(tmpPc);
         #endif
@@ -142,9 +143,12 @@ int main(int argc, char *argv[]) {
 // Methods for each ISA input
 void literal(int reg, int val) {
     registerFile[reg] = val;
-    
+
 }
 void ret() {
+    sp = bp - 1;
+    bp = stack[sp + 3];
+    pc = stack[sp + 4];
 
 }
 void load(int reg, int lex, int offset) {
@@ -293,7 +297,7 @@ int readInstructions(FILE* file) {
 }
 
 #ifdef DISPLAY
-char* oper[] = {"lit","opr","lod","sto","cal","inc","jmp","jpc","sio", "sio",
+char* oper[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio", "sio",
  "sio", "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq", "lss",
  "leq", "gtr", "geq"};
 // Method to make printing of Instructions easier
