@@ -22,7 +22,7 @@ $(PROG): $(OBJ)
 	$(CC) -o $@ $^
 
 
-%.o: %.c $(DEPS)
+$(FDIR)/%.o: %.c $(DEPS)
 	$(CC) -c $<
 
 test: $(EX)
