@@ -6,22 +6,35 @@
 #include <string.h>
 #define DISPLAY
 
-int sp = -1;
-int bp = 0;
-int pc = 0;
-struct instruction* ir = 0;
-int stack[MAX_DATASTACK_HEIGHT] = {};
-struct instruction **code;
-int registerFile[NUM_REGISTERS] = {};
-int halt = 1;
-int numLines = 0;
+// Declaration of Global variables and arrays used throughout the VM
+int sp, bp, pc, halt, numLines, *stack, *registerFile;
+struct instruction *ir, **code;
+
 // Array used to keep track of the end of any activation records.
 // Used exclusively for printing purposes.
 #ifdef DISPLAY
-    int endOfRecord[MAX_DATASTACK_HEIGHT] = {};
+int *endOfRecord;
+char *oper[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio", "sio",
+    "sio", "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq", "lss",
+    "leq", "gtr", "geq"};
 #endif
 
+
 int main(int argc, char *argv[]) {
+
+    // Instantiation of Global variables
+    sp = -1;
+    bp = 0;
+    pc = 0;
+    stack = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
+    registerFile = calloc(NUM_REGISTERS, sizeof(int));
+    halt = 1;
+    numLines = 0;
+
+    // Instantiation of array for printing purposes
+    #ifdef DISPLAY
+    endOfRecord = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
+    #endif
 
 	FILE *file = fopen(argv[1], "r");
 	if(file == 0) {
@@ -307,9 +320,6 @@ int readInstructions(FILE* file) {
 }
 
 #ifdef DISPLAY
-char* oper[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio", "sio",
- "sio", "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq", "lss",
- "leq", "gtr", "geq"};
 // Method to make printing of Instructions easier
 void printInstructions() {
 	//String array to translate from input number to corresponding operation 
