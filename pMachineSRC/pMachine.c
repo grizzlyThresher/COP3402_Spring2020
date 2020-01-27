@@ -11,7 +11,7 @@ int bp = 0;
 int pc = 0;
 struct instruction* ir = 0;
 int stack[MAX_DATASTACK_HEIGHT] = {};
-struct instruction code[MAX_CODE_LENGTH] = {};
+struct instruction **code;
 int registerFile[NUM_REGISTERS] = {};
 int halt = 1;
 int numLines = 0;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
 	while(halt == 1) {
 		// Fetch
-		ir = &code[pc];
+		ir = code[pc];
         tmpPc = pc;
 		// Execute
         // sysOp is repeated intentionally to comply with specs given in the HW file.
@@ -137,6 +137,9 @@ int main(int argc, char *argv[]) {
         #endif
 	}
 
+    // numLInes + 1 because code always has one more element than 
+    // number of instructions read.
+    destroyCode(code, numLines + 1);
     return 0;
 }
 
@@ -274,22 +277,29 @@ int readInstructions(FILE* file) {
 
 	int tmpNum = 0;
 	int numCnt = 1;
-	//reads in from file 1 at a time while keeping track of position and 
-	//line number. 
+    // Initialize the code array and first instruction
+    code = malloc(sizeof(struct instruction*));
+    code[0] = malloc(sizeof(struct instruction));
+	//reads in from file 1 number at a time while keeping track of position and 
+	//line number.
 	while(fscanf(file, "%d", &tmpNum)==1) {
 		if(numLines >= MAX_CODE_LENGTH) 
 			return 1;
-		
+
 		if(numCnt % 4 == 1) {
-			code[numLines].op = tmpNum;
+			code[numLines]->op = tmpNum;
 		} else if(numCnt % 4 == 2) {
-			code[numLines].r = tmpNum;
+			code[numLines]->r = tmpNum;
 		} else if (numCnt % 4 == 3) {
-            code[numLines].l = tmpNum;
+            code[numLines]->l = tmpNum;
         } else {
-			code[numLines].m = tmpNum;
+			code[numLines]->m = tmpNum;
 				numLines++;
 				numCnt=0;
+                // Re-size code array to fit next instruction
+                // Initializes next instruction
+            code = realloc(code, (numLines + 1) * sizeof(struct instruction*));
+            code[numLines] = malloc(sizeof(struct instruction));
 		}
 		numCnt++;
 	}
@@ -307,7 +317,7 @@ void printInstructions() {
     char buffer[8] = {};
 	for(int i = 0; i < numLines; i++) {
         makeBuffer(buffer, i, 7);
-		printf("%d%s%s    %d   %d    %d \n", i, buffer, oper[code[i].op - 1], code[i].r, code[i].l, code[i].m);
+		printf("%d%s%s    %d   %d    %d \n", i, buffer, oper[(code[i]->op) - 1], code[i]->r, code[i]->l, code[i]->m);
 	}
 
 }
@@ -369,6 +379,14 @@ void makeBuffer(char *str, int num, int maxSize) {
 }
 
 #endif
+
+// Method used to free code array once program is complete.
+void destroyCode(struct instruction** ptr, int pLen) {
+    for (int i = 0; i < pLen; i++) {
+        free(ptr[i]);
+    }
+    free(ptr);
+}
 
 // Method used to redefine base in terms of requested lexicographical level
 int base(int l, int base) {

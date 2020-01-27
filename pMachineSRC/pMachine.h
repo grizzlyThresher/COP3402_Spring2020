@@ -46,5 +46,7 @@ void printInstructions();
 void printState(int curLoc);
 // Method used for formatting in the event a value requires 2 digits.
 void makeBuffer(char *str, int num, int maxSize);
+// Method used to free code array once program is complete.
+void destroyCode(struct instruction** ptr, int pLen);
 // Method used to redefine base
 int base(int l, int base);
