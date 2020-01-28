@@ -11,9 +11,10 @@ SRC = $(patsubst %,$(FDIR)/%,$(_SRC))
 TEST = $(patsubst %,$(TDIR)/%,$(_TEST))
 OBJ = $(SRC:%.c=%.o)
 EX = $(patsubst %, ./%, $(PROG))
+OUT = output.txt
 
 
-.PHONY: all clean test
+.PHONY: all clean test run
 
 all: $(PROG)
 
@@ -25,9 +26,11 @@ $(PROG): $(OBJ)
 $(FDIR)/%.o: %.c $(DEPS)
 	$(CC) -c $<
 
-test: $(EX)
+view: $(EX)
 	$(EX) $(TEST)
 
+print: $(OUT)
+	$(EX) $(TEST) > $(OUT)
 
 clean:
 	rm -rf $(PROG) $(OBJ)
