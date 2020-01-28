@@ -56,6 +56,7 @@ int main(int argc, char *argv[]) {
 	printf("Initial values:           %d     %d     %d    0  0  0  0  0  0  0\n\n",pc,bp,sp);
     #endif
 
+    // Temp variable used to store pc value before execution
     int tmpPc = pc;
 
 	while(halt == 1) {
@@ -171,10 +172,12 @@ void ret() {
 }
 void load(int reg, int lex, int offset) {
 
+    registerFile[reg] = stack[base(l, bp) + offset];
     
 }
 void store(int reg, int lex, int offset) {
 
+    stack[base(l, bp) + offset] = registerFile[reg];
     
 }
 void call(int lex, int loc) {
@@ -362,7 +365,7 @@ void printState(int curLoc) {
     printf("\nStack: ");
     // Prints out the current state of the data-stack
 	for (int i = 0; i < sp; i++) {
-        if (endOfRecord[i] == 1 && i > 0) {
+        if (endOfRecord[i] == 1) {
             printf("| %d ", stack[i]);
         } else {
             printf("%d ", stack[i]);
