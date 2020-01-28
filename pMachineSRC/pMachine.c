@@ -25,8 +25,8 @@ int main(int argc, char *argv[]) {
    
 
     // Instantiation of Global variables
-    sp = -1;
-    bp = 0;
+    sp = 0;
+    bp = 1;
     pc = 0;
     stack = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
     registerFile = calloc(NUM_REGISTERS, sizeof(int));
@@ -191,7 +191,7 @@ void call(int lex, int loc) {
         pc = loc - 1;
 
         #ifdef DISPLAY
-        endOfRecord[sp + 1] = 1;
+        endOfRecord[sp] = 1;
         #endif
     }
 
@@ -361,7 +361,7 @@ void printState(int curLoc) {
     }
     printf("\nStack: ");
     // Prints out the current state of the data-stack
-	for (int i = 0; i <= sp; i++) {
+	for (int i = 0; i < sp; i++) {
         if (endOfRecord[i] == 1 && i > 0) {
             printf("| %d ", stack[i]);
         } else {
