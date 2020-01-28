@@ -53,13 +53,17 @@ int main(int argc, char *argv[]) {
     #ifdef DISPLAY
 	printInstructions();
 	printf("\n\n                          pc    bp    sp    registers\n");
-	printf("Initial values:           %d     %d     %d    0  0  0  0  0  0  0\n\n",pc,bp,sp);
+	printf("Initial values:           %d     %d     %d   ", pc,bp,sp);
+    for (int i = 0; i < NUM_REGISTERS; i++) {
+        printf("  0");
+    }
+    printf("\n\n");
     #endif
 
     // Temp variable used to store pc value before execution
     int tmpPc = pc;
 
-	while(halt == 1) {
+	while(halt != 0) {
 		// Fetch
 		ir = code[pc];
         tmpPc = pc;
@@ -132,15 +136,15 @@ int main(int argc, char *argv[]) {
             case 22:
                 lessOrEqual(ir->r, ir->l, ir->m);             
                 break;
-                case 23:
+            case 23:
                 greater(ir->r, ir->l, ir->m);
                 break;
             case 24:
                 greaterOrEqual(ir->r, ir->l, ir->m);
                 break;
             default:
-                printf("Error: Invalid Operation.\n");
-                halt = 0;
+                BAD_OPERATION
+                HALT
                 break;
 		}
 
@@ -161,29 +165,61 @@ int main(int argc, char *argv[]) {
 
 // Methods for each ISA input
 void literal(int reg, int val) {
-    registerFile[reg] = val;
+    if (reg < 0 || reg >= NUM_REGISTERS) {
+        INVALID_REGISTER
+        HALT
+    } else {
+        registerFile[reg] = val;
+    }
 
 }
 void ret() {
-    sp = bp - 1;
-    bp = stack[sp + 3];
-    pc = stack[sp + 4];
+    if (bp != 1) {
+        sp = bp - 1;
+        bp = stack[sp + 3];
+        pc = stack[sp + 4];
+    }
 
 }
 void load(int reg, int lex, int offset) {
+    int place = base(lex, bp) + offset;
 
-    registerFile[reg] = stack[base(l, bp) + offset];
+    if (reg < 0 || reg >= NUM_REGISTERS) {
+        INVALID_REGISTER
+        HALT
+    }
+    if (place >= MAX_DATASTACK_HEIGHT) {
+        OUT_OF_BOUNDS
+        HALT
+    } else if (place > 0) {
+        registerFile[reg] = stack[place];
+    } else {
+       OUT_OF_BOUNDS
+        HALT
+    }
     
 }
 void store(int reg, int lex, int offset) {
-
-    stack[base(l, bp) + offset] = registerFile[reg];
+    if (reg < 0 || reg >= NUM_REGISTERS) {
+        INVALID_REGISTER
+        HALT
+    }
+    int place = base(lex, bp) + offset;
+    if (place >= MAX_DATASTACK_HEIGHT) {
+        STACK_OVERFLOW
+        HALT
+    } else if (place > 0) {
+        stack[place] = registerFile[reg];
+    } else {
+        OUT_OF_BOUNDS
+        HALT
+    }
     
 }
 void call(int lex, int loc) {
     if (sp + 4 >= MAX_DATASTACK_HEIGHT) {
-        printf("Error: Stack Overflow.\n");
-        halt = 1;
+        STACK_OVERFLOW
+        HALT
     } else {
         stack[sp + 1] = 0;
         stack[sp + 2] = base(lex, bp);
@@ -202,18 +238,30 @@ void call(int lex, int loc) {
 void inc(int numLocals) {
 
     if (sp + numLocals >= MAX_DATASTACK_HEIGHT) {
-        printf("Error: Stack Overflow.\n");
-        halt = 0;
+        STACK_OVERFLOW
+        HALT
     } else {
         sp += numLocals;
     }
         
 }
 void jump(int loc) {
+    // Throws an error and stops the program if given line of code doesn't exist
+    if (loc < 0 || loc >= numLines) {
+        BAD_INSTRUCTION
+        HALT
+    }
     // Subtracts 1 to offset global pc increment
     pc = loc - 1;
 }
 void jmpIfZero(int reg, int loc) {
+
+    // Throws an error and stops the program if given line of code doesn't exist
+    if (loc < 0 || loc >= numLines) {
+        BAD_INSTRUCTION
+        HALT
+    }
+
     if(registerFile[reg] == 0) {
         // Subtracts 1 to offset global pc increment
         pc = loc - 1;
@@ -232,8 +280,8 @@ void sysOp(int reg, int op) {
 			end();
             break;
         default:
-            printf("Error: Invalid System Operation.\n");
-            halt = 0;
+            BAD_OPERATION
+            HALT
             break;
 	}
     
@@ -286,7 +334,7 @@ void read(int reg) {
 
 }
 void end() {
-	halt = 0;
+	HALT
 }
 
 
@@ -342,7 +390,7 @@ void printInstructions() {
 // Method used to print current state of the machine
 void printState(int curLoc) {
 
-    printf("                          pc    bp    sp    registers\n");
+//    printf("                          pc    bp    sp    registers\n");
     char *buffer = calloc(11, sizeof(char));
     // Prints out the current state with spacing determined by the number of digits
     // in the associated values.
@@ -364,9 +412,9 @@ void printState(int curLoc) {
     }
     printf("\nStack: ");
     // Prints out the current state of the data-stack
-	for (int i = 0; i < sp; i++) {
-        if (endOfRecord[i] == 1) {
-            printf("| %d ", stack[i]);
+	for (int i = 1; i <= sp; i++) {
+        if (endOfRecord[i] == 1 && i != sp) {
+            printf("%d | ", stack[i]);
         } else {
             printf("%d ", stack[i]);
         }
@@ -374,7 +422,6 @@ void printState(int curLoc) {
     printf("\n\n");
     free(buffer);
 }
-
 // Method used for formatting in the event a value requires 2 digits.
 // maxSize should always be <= max size of str.
 void makeBuffer(char *str, int num, int maxSize) {
@@ -423,7 +470,6 @@ void destroyCode(struct instruction** ptr, int pLen) {
     }
     free(ptr);
 }
-
 // Method used to redefine base in terms of requested lexicographical level
 int base(int l, int base) {
 	int b1 = base;

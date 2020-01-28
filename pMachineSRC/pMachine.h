@@ -1,8 +1,18 @@
 #include <stdio.h>
+// Constants used in the Virtual Machine
 #define MAX_DATASTACK_HEIGHT  40
 #define MAX_CODE_LENGTH  200
 #define MAX_LEXI_LEVELS  3
 #define NUM_REGISTERS 8
+// Used to halt the fetch->execute cycle
+#define HALT halt = 0;
+// Potential Error Messages
+#define STACK_OVERFLOW printf("ERROR: Stack Overflow.\n");
+#define OUT_OF_BOUNDS printf("ERROR: Invalid Memory Location.\n");
+#define INVALID_REGISTER printf("ERROR: Invalid Register.\n");
+#define BAD_INSTRUCTION printf("ERROR: Invalid Instruction Location.\n");
+#define BAD_OPERATION printf("ERROR: Invalid Operation.\n");
+
 // struct used to organize instructions
 struct instruction{
     int op;
