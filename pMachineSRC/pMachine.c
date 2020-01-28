@@ -22,6 +22,8 @@ char *oper[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio", "sio",
 
 int main(int argc, char *argv[]) {
 
+   
+
     // Instantiation of Global variables
     sp = -1;
     bp = 0;
@@ -34,7 +36,7 @@ int main(int argc, char *argv[]) {
     // Instantiation of array for printing purposes
     #ifdef DISPLAY
     endOfRecord = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
-    #endif
+    #endif  
 
 	FILE *file = fopen(argv[1], "r");
 	if(file == 0) {
@@ -150,9 +152,9 @@ int main(int argc, char *argv[]) {
         #endif
 	}
 
-    // numLInes + 1 because code always has one more element than 
-    // number of instructions read.
-    destroyCode(code, numLines + 1);
+    // Frees all remaining pointers on the heap
+    freeAll(file);
+    
     return 0;
 }
 
@@ -189,7 +191,7 @@ void call(int lex, int loc) {
         pc = loc - 1;
 
         #ifdef DISPLAY
-        endOfRecord[sp] = 1;
+        endOfRecord[sp + 1] = 1;
         #endif
     }
 
@@ -316,6 +318,9 @@ int readInstructions(FILE* file) {
 		}
 		numCnt++;
 	}
+    free(code[numLines]);
+    code = realloc(code, (numLines) * sizeof(struct instruction*));
+
 	return 0;
 }
 
@@ -335,7 +340,7 @@ void printInstructions() {
 void printState(int curLoc) {
 
     printf("                          pc    bp    sp    registers\n");
-    char buffer[11] = {};
+    char *buffer = calloc(11, sizeof(char));
     // Prints out the current state with spacing determined by the number of digits
     // in the associated values.
     makeBuffer(buffer, curLoc, 4);
@@ -357,13 +362,14 @@ void printState(int curLoc) {
     printf("\nStack: ");
     // Prints out the current state of the data-stack
 	for (int i = 0; i <= sp; i++) {
-        if (endOfRecord[i] == 1 && sp != i) {
-            printf("%d | ", stack[i]);
+        if (endOfRecord[i] == 1 && i > 0) {
+            printf("| %d ", stack[i]);
         } else {
             printf("%d ", stack[i]);
         }
     }
     printf("\n\n");
+    free(buffer);
 }
 
 // Method used for formatting in the event a value requires 2 digits.
@@ -390,6 +396,23 @@ void makeBuffer(char *str, int num, int maxSize) {
 
 #endif
 
+// Method to free all arrays instantiated on the heap
+void freeAll(FILE *file) {
+
+    // numLInes + 1 because code always has one more element than 
+    // number of instructions read.
+    destroyCode(code, numLines);
+    code = NULL;
+    free(stack);
+    stack = NULL;
+    free(registerFile);
+    registerFile = NULL;
+    free(file);
+    #ifdef DISPLAY
+    free(endOfRecord);
+    endOfRecord = NULL;
+    #endif
+}
 // Method used to free code array once program is complete.
 void destroyCode(struct instruction** ptr, int pLen) {
     for (int i = 0; i < pLen; i++) {
