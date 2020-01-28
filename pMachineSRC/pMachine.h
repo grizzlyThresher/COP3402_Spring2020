@@ -7,11 +7,11 @@
 // Used to halt the fetch->execute cycle
 #define HALT halt = 0;
 // Potential Error Messages
-#define STACK_OVERFLOW printf("ERROR: Stack Overflow.\n");
-#define OUT_OF_BOUNDS printf("ERROR: Invalid Memory Location.\n");
-#define INVALID_REGISTER printf("ERROR: Invalid Register.\n");
-#define BAD_INSTRUCTION printf("ERROR: Invalid Instruction Location.\n");
-#define BAD_OPERATION printf("ERROR: Invalid Operation.\n");
+#define STACK_OVERFLOW fprintf(stderr, "ERROR: Stack Overflow.\n");
+#define OUT_OF_BOUNDS fprintf(stderr, "ERROR: Invalid Memory Location.\n");
+#define INVALID_REGISTER fprintf(stderr, "ERROR: Invalid Register.\n");
+#define BAD_INSTRUCTION fprintf(stderr, "ERROR: Invalid Instruction Location.\n");
+#define BAD_OPERATION fprintf(stderr, "ERROR: Invalid Operation.\n");
 
 // struct used to organize instructions
 struct instruction{
@@ -57,7 +57,7 @@ void printState(int curLoc);
 // Method used for formatting in the event a value requires 2 digits.
 void makeBuffer(char *str, int num, int maxSize);
 // Method to free all arrays instantiated on the heap
-void freeAll(FILE *file);
+void freeAll(FILE *input, FILE *output);
 // Method used to free code array once program is complete.
 void destroyCode(struct instruction** ptr, int pLen);
 // Method used to redefine base

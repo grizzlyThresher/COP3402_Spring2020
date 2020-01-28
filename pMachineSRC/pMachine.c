@@ -4,24 +4,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define DISPLAY
 
 // Declaration of Global variables and arrays used throughout the VM
-int sp, bp, pc, halt, numLines, *stack, *registerFile;
+int sp, bp, pc, halt, numLines, *stack, *registerFile, *endOfRecord;
 struct instruction *ir, **code;
+FILE *opr;
 
-// Array used to keep track of the end of any activation records.
-// Used exclusively for printing purposes.
-#ifdef DISPLAY
-int *endOfRecord;
 char *oper[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio", "sio",
     "sio", "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq", "lss",
     "leq", "gtr", "geq"};
-#endif
 
 
 int main(int argc, char *argv[]) {
-
    
 
     // Instantiation of Global variables
@@ -34,31 +28,44 @@ int main(int argc, char *argv[]) {
     numLines = 0;
 
     // Instantiation of array for printing purposes
-    #ifdef DISPLAY
     endOfRecord = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
-    #endif  
 
-	FILE *file = fopen(argv[1], "r");
-	if(file == 0) {
-		printf("Could not find valid file by name: %s \n", argv[1]);
+    char inFile[] = "test.txt";
+	FILE *ipr = fopen(inFile, "r");
+
+	if(ipr == NULL) {
+		fprintf(stderr, "Could not find valid file by name: %s \n", inFile);
 		return 0;
 	}
 
-	if(readInstructions(file) == 1) {
-		printf("Program too long for machine to run.");
+
+	if(readInstructions(ipr) == 1) {
+		fprintf(stderr, "Program too long for machine to run.");
 		return 0;
 	}
+
+    #ifndef DISPLAY
+    char outFile[] = "output.txt";
+    opr = fopen(outFile, "w");
+    if(opr == NULL) {
+        fprintf(stderr, "Could not find valid file by name: %s \n", outFile);
+        return 0;
+    }
+    #endif
+    #ifdef DISPLAY
+    opr = stdout;
+    #endif
     // Will only print the instructions and stack trace while DISPLAY the VM
     // Avoids messiness for actual use of the machine.
-    #ifdef DISPLAY
+
 	printInstructions();
-	printf("\n\n                          pc    bp    sp    registers\n");
-	printf("Initial values:           %d     %d     %d   ", pc,bp,sp);
+	fprintf(opr, "\n\n                          pc    bp    sp    registers\n");
+	fprintf(opr, "Initial values:           %d     %d     %d   ", pc,bp,sp);
     for (int i = 0; i < NUM_REGISTERS; i++) {
-        printf("  0");
+        fprintf(opr, "  0");
     }
-    printf("\n\n");
-    #endif
+    fprintf(opr, "\n\n");
+
 
     // Temp variable used to store pc value before execution
     int tmpPc = pc;
@@ -151,14 +158,11 @@ int main(int argc, char *argv[]) {
         // Increments the Program Counter
         pc++;
         
-        // Only prints the stack trace while the VM is in DISPLAY mode
-        #ifdef DISPLAY
 		printState(tmpPc);
-        #endif
 	}
 
     // Frees all remaining pointers on the heap
-    freeAll(file);
+    freeAll(ipr, opr);
     
     return 0;
 }
@@ -229,9 +233,7 @@ void call(int lex, int loc) {
         // Subtracts 1 to offset global pc increment
         pc = loc - 1;
 
-        #ifdef DISPLAY
         endOfRecord[sp] = 1;
-        #endif
     }
 
 }
@@ -375,51 +377,50 @@ int readInstructions(FILE* file) {
 	return 0;
 }
 
-#ifdef DISPLAY
 // Method to make printing of Instructions easier
 void printInstructions() {
 	//String array to translate from input number to corresponding operation 
-	printf("Line    Op    R   L    M \n");
+	fprintf(opr, "Line    Op    R   L    M \n");
     char buffer[8] = {};
 	for(int i = 0; i < numLines; i++) {
         makeBuffer(buffer, i, 7);
-		printf("%d%s%s    %d   %d    %d \n", i, buffer, oper[(code[i]->op) - 1], code[i]->r, code[i]->l, code[i]->m);
+		fprintf(opr, "%d%s%s    %d   %d    %d \n", i, buffer, oper[(code[i]->op) - 1], code[i]->r, code[i]->l, code[i]->m);
 	}
 
 }
 // Method used to print current state of the machine
 void printState(int curLoc) {
 
-//    printf("                          pc    bp    sp    registers\n");
+//    fprintf(opr, "                          pc    bp    sp    registers\n");
     char *buffer = calloc(11, sizeof(char));
     // Prints out the current state with spacing determined by the number of digits
     // in the associated values.
     makeBuffer(buffer, curLoc, 4);
-    printf("%d%s", curLoc, buffer);
+    fprintf(opr, "%d%s", curLoc, buffer);
     makeBuffer(buffer, ir->m, 11);
-    printf("%s  %d  %d  %d%s%d", oper[(ir->op)-1], ir->r, ir->l, ir->m, buffer, pc);
+    fprintf(opr, "%s  %d  %d  %d%s%d", oper[(ir->op)-1], ir->r, ir->l, ir->m, buffer, pc);
     makeBuffer(buffer, pc, 6);
-    printf("%s%d", buffer, bp);
+    fprintf(opr, "%s%d", buffer, bp);
     makeBuffer(buffer, bp, 6);
-    printf("%s%d", buffer, sp);
+    fprintf(opr, "%s%d", buffer, sp);
     makeBuffer(buffer, sp, 6);
-    printf("%s", buffer);
+    fprintf(opr, "%s", buffer);
     
     // Prints out the current state of the register file
     for (int i = 0; i < NUM_REGISTERS; i++) {
         makeBuffer(buffer, registerFile[i], 3);
-        printf("%d%s", registerFile[i], buffer);
+        fprintf(opr, "%d%s", registerFile[i], buffer);
     }
-    printf("\nStack: ");
+    fprintf(opr, "\nStack: ");
     // Prints out the current state of the data-stack
 	for (int i = 1; i <= sp; i++) {
         if (endOfRecord[i] == 1 && i != sp) {
-            printf("%d | ", stack[i]);
+            fprintf(opr, "%d | ", stack[i]);
         } else {
-            printf("%d ", stack[i]);
+            fprintf(opr, "%d ", stack[i]);
         }
     }
-    printf("\n\n");
+    fprintf(opr, "\n\n");
     free(buffer);
 }
 // Method used for formatting in the event a value requires 2 digits.
@@ -444,23 +445,18 @@ void makeBuffer(char *str, int num, int maxSize) {
         str[offset] = '\0';
 }
 
-#endif
-
 // Method to free all arrays instantiated on the heap
-void freeAll(FILE *file) {
+void freeAll(FILE *input, FILE *output) {
 
     // numLInes + 1 because code always has one more element than 
     // number of instructions read.
     destroyCode(code, numLines);
-    code = NULL;
     free(stack);
-    stack = NULL;
     free(registerFile);
-    registerFile = NULL;
-    free(file);
-    #ifdef DISPLAY
+    free(input);
     free(endOfRecord);
-    endOfRecord = NULL;
+    #ifndef DISPLAY
+    free(output);
     #endif
 }
 // Method used to free code array once program is complete.
