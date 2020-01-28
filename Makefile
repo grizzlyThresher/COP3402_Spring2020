@@ -20,5 +20,9 @@ $(PROG): $(OBJ)
 $(FDIR)/%.o: %.c $(DEPS)
 	$(CC) -c $<
 
+run: $(EX)
+	$(EX)
+
+
 clean:
 	rm -rf $(PROG) $(OBJ)
