@@ -52,7 +52,7 @@ int readInstructions(FILE* file);
 // Method to make printing of Instructions easier
 void printInstructions();
 // Method used to print current state of the machine
-void printState(int curLoc);
+void printState(int curLoc, int l);
 // Method used for formatting in the event a value requires 2 digits.
 void makeBuffer(char *str, int num, int maxSize);
 // Method used to free code array once program is complete.

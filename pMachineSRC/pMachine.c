@@ -6,12 +6,12 @@
 #include <string.h>
 
 // Declaration of Global variables and arrays used throughout the VM
-int sp, bp, pc, halt, numLines, *stack, *registerFile, *endOfRecord;
+int sp, bp, pc, halt, numLines, curLex, *stack, *registerFile;
 struct instruction *ir, **code;
 FILE *opr;
 
-char *oper[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio", "sio",
-    "sio", "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq", "lss",
+char *oper[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio",
+    "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq", "lss",
     "leq", "gtr", "geq"};
 
 
@@ -21,13 +21,13 @@ int main(int argc, char *argv[]) {
     sp = 0;
     bp = 1;
     pc = 0;
+    ir = 0;
     stack = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
     registerFile = calloc(NUM_REGISTERS, sizeof(int));
     halt = 1;
     numLines = 0;
-
-    // Instantiation of array for printing purposes
-    endOfRecord = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
+    //Keeps track of legicographical level for printing purposes
+    curLex = 0;
 
     // If display is entered before the file to be read when running the program, stack trace is printed to console
     // Otherwise, file is read normally and stack trace is printed to output.txt
@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
         opr = stdout;
         inFile = argv[2];
     } else {
+        printf("%s\n", argv[1]);
         inFile = argv[1];
         char outFile[] = "output.txt";
         opr = fopen(outFile, "w");
@@ -60,9 +61,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Program too long for machine to run.");
 		return 0;
 	}
-
-    // Will only print the instructions and stack trace while DISPLAY the VM
-    // Avoids messiness for actual use of the machine.
+    fclose(ipr);
 
 	printInstructions();
 	fprintf(opr, "\n\n                          pc    bp    sp    registers\n");
@@ -111,48 +110,42 @@ int main(int argc, char *argv[]) {
 				sysOp(ir->r, ir->m);
                 break;
             case 10:
-                sysOp(ir->r, ir->m);
-                break;
-            case 11:
-                sysOp(ir->r, ir->m);
-                break;
-            case 12:
                 negate(ir->r, ir->m);
                 break;
-            case 13:
+            case 11:
                 add(ir->r, ir->l, ir->m);
                 break;
-            case 14:
+            case 12:
                 sub(ir->r, ir->l, ir->m);
                 break;
-            case 15:
+            case 13:
                 multiply(ir->r, ir->l, ir->m);
                 break;
-            case 16:
+            case 14:
                 divide(ir->r, ir->l, ir->m);
                 break;
-            case 17:
+            case 15:
                 odd(ir->r, ir->m);
                 break;
-            case 18:
+            case 16:
                 mod(ir->r, ir->l, ir->m);
                 break;
-            case 19:
+            case 17:
                 equal(ir->r, ir->l, ir->m);
                 break;
-            case 20:
+            case 18:
                 notEqual(ir->r, ir->l, ir->m);
                 break;
-            case 21:
+            case 19:
                 less(ir->r, ir->l, ir->m);
                 break;
-            case 22:
+            case 20:
                 lessOrEqual(ir->r, ir->l, ir->m);             
                 break;
-            case 23:
+            case 21:
                 greater(ir->r, ir->l, ir->m);
                 break;
-            case 24:
+            case 22:
                 greaterOrEqual(ir->r, ir->l, ir->m);
                 break;
             default:
@@ -164,17 +157,15 @@ int main(int argc, char *argv[]) {
         // Increments the Program Counter
         pc++;
         
-		printState(tmpPc);
+		printState(tmpPc, curLex);
 	}
 
     // Frees all remaining pointers on the heap
     destroyCode(code, numLines);
     free(stack);
     free(registerFile);
-    free(ipr);
-    free(endOfRecord);
     if(strcmp("display",argv[1])) {
-        free(opr);
+        fclose(opr);
     }
     
     return 0;
@@ -195,6 +186,7 @@ void ret() {
         sp = bp - 1;
         bp = stack[sp + 3];
         pc = stack[sp + 4];
+        curLex--;
     }
 
 }
@@ -246,7 +238,7 @@ void call(int lex, int loc) {
         // Subtracts 1 to offset global pc increment
         pc = loc - 1;
 
-        endOfRecord[sp] = 1;
+        curLex++;
     }
 
 }
@@ -402,7 +394,7 @@ void printInstructions() {
 
 }
 // Method used to print current state of the machine
-void printState(int curLoc) {
+void printState(int curLoc, int l) {
 
 //    fprintf(opr, "                          pc    bp    sp    registers\n");
     char *buffer = calloc(11, sizeof(char));
@@ -425,10 +417,13 @@ void printState(int curLoc) {
         fprintf(opr, "%d%s", registerFile[i], buffer);
     }
     fprintf(opr, "\nStack: ");
+    int lineCnt = l;
+
     // Prints out the current state of the data-stack
 	for (int i = 1; i <= sp; i++) {
-        if (endOfRecord[i] == 1 && i != sp) {
-            fprintf(opr, "%d | ", stack[i]);
+        if (lineCnt > 0 && i == base(lineCnt - 1, bp)) {
+            fprintf(opr, "| %d ", stack[i]);
+            lineCnt--;
         } else {
             fprintf(opr, "%d ", stack[i]);
         }
@@ -468,7 +463,7 @@ void destroyCode(struct instruction** ptr, int pLen) {
 int base(int l, int base) {
 	int b1 = base;
 	while (l-- > 0) {
-		b1 = stack[b1 - 1];
+		b1 = stack[b1 + 1];
 	}
 	return b1;
 }
