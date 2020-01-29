@@ -15,8 +15,7 @@ char *oper[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio", "sio",
     "leq", "gtr", "geq"};
 
 
-int main(int argc, char *argv[]) {
-   
+int main(int argc, char *argv[]) {   
 
     // Instantiation of Global variables
     sp = 0;
@@ -30,9 +29,27 @@ int main(int argc, char *argv[]) {
     // Instantiation of array for printing purposes
     endOfRecord = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
 
-    char inFile[] = "test.txt";
-	FILE *ipr = fopen(inFile, "r");
+    // If display is entered before the file to be read when running the program, stack trace is printed to console
+    // Otherwise, file is read normally and stack trace is printed to output.txt
+    char *inFile;
+    if (argv[1] == NULL) {
+        fprintf(stderr, "System requires either command or file name.\n");
+        return 0;
+    } else if (strcmp("display",argv[1]) == 0) {
+        opr = stdout;
+        inFile = argv[2];
+    } else {
+        inFile = argv[1];
+        char outFile[] = "output.txt";
+        opr = fopen(outFile, "w");
+        if(opr == NULL) {
+            fprintf(stderr, "Could not find valid file by name: %s \n", outFile);
+            return 0;
+        }
+    }
 
+    
+	FILE *ipr = fopen(inFile, "r");
 	if(ipr == NULL) {
 		fprintf(stderr, "Could not find valid file by name: %s \n", inFile);
 		return 0;
@@ -44,17 +61,6 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
-    #ifndef DISPLAY
-    char outFile[] = "output.txt";
-    opr = fopen(outFile, "w");
-    if(opr == NULL) {
-        fprintf(stderr, "Could not find valid file by name: %s \n", outFile);
-        return 0;
-    }
-    #endif
-    #ifdef DISPLAY
-    opr = stdout;
-    #endif
     // Will only print the instructions and stack trace while DISPLAY the VM
     // Avoids messiness for actual use of the machine.
 
@@ -162,7 +168,14 @@ int main(int argc, char *argv[]) {
 	}
 
     // Frees all remaining pointers on the heap
-    freeAll(ipr, opr);
+    destroyCode(code, numLines);
+    free(stack);
+    free(registerFile);
+    free(ipr);
+    free(endOfRecord);
+    if(strcmp("display",argv[1])) {
+        free(opr);
+    }
     
     return 0;
 }
@@ -443,21 +456,6 @@ void makeBuffer(char *str, int num, int maxSize) {
             str[i] = ' ';
         }
         str[offset] = '\0';
-}
-
-// Method to free all arrays instantiated on the heap
-void freeAll(FILE *input, FILE *output) {
-
-    // numLInes + 1 because code always has one more element than 
-    // number of instructions read.
-    destroyCode(code, numLines);
-    free(stack);
-    free(registerFile);
-    free(input);
-    free(endOfRecord);
-    #ifndef DISPLAY
-    free(output);
-    #endif
 }
 // Method used to free code array once program is complete.
 void destroyCode(struct instruction** ptr, int pLen) {

@@ -12,8 +12,6 @@
 #define INVALID_REGISTER fprintf(stderr, "ERROR: Invalid Register.\n");
 #define BAD_INSTRUCTION fprintf(stderr, "ERROR: Invalid Instruction Location.\n");
 #define BAD_OPERATION fprintf(stderr, "ERROR: Invalid Operation.\n");
-#define DISPLAY
-
 // struct used to organize instructions
 struct instruction{
     int op;
@@ -57,8 +55,6 @@ void printInstructions();
 void printState(int curLoc);
 // Method used for formatting in the event a value requires 2 digits.
 void makeBuffer(char *str, int num, int maxSize);
-// Method to free all arrays instantiated on the heap
-void freeAll(FILE *input, FILE *output);
 // Method used to free code array once program is complete.
 void destroyCode(struct instruction** ptr, int pLen);
 // Method used to redefine base
