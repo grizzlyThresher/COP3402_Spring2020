@@ -19,43 +19,11 @@ struct instruction{
     int l;
     int m;
 };
-// Methods for each ISA input
-void literal(int reg, int val);
-void ret();
-void load(int reg, int lex, int offset);
-void store(int reg, int lex, int offset);
-void call(int lex, int index);
-void inc(int numLocals);
-void jump(int loc);
-void jmpIfZero(int reg, int loc);
-void sysOp(int reg, int op);
-void negate(int stoReg, int froReg);
-void add(int stoReg, int reg1, int reg2);
-void sub(int stoReg, int reg1, int reg2);
-void multiply(int stoReg, int reg1, int reg2);
-void divide(int stoReg, int reg1, int reg2);
-void odd(int stoReg, int froReg);
-void mod(int stoReg, int reg1, int reg2);
-void equal(int stoReg, int reg1, int reg2);
-void notEqual(int stoReg, int reg1, int reg2);
-void less(int stoReg, int reg1, int reg2);
-void lessOrEqual(int stoReg, int reg1, int reg2);
-void greater(int stoReg, int reg1, int reg2);
-void greaterOrEqual(int stoReg, int reg1, int reg2);
-// Methods for each System Operation
-void write(int reg);
-void read(int reg);
-void end();
-
 // Method to separate the reading of the instructions from the rest of main
-int readInstructions(FILE* file);
-// Method to make printing of Instructions easier
-void printInstructions();
+int readInstructions(struct instruction** code, FILE* input, FILE* output, char** oper, int* lines);
 // Method used to print current state of the machine
-void printState(int curLoc, int l);
+void printState(int* stack, int curLoc, struct instruction ir, int pc, int bp, int sp, int* regFile, int l, FILE* output, char** oper);
 // Method used for formatting in the event a value requires 2 digits.
 void makeBuffer(char *str, int num, int maxSize);
-// Method used to free code array once program is complete.
-void destroyCode(struct instruction** ptr, int pLen);
 // Method used to redefine base
-int base(int l, int base);
+int base(int* stack, int l, int base);

@@ -5,29 +5,26 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Declaration of Global variables and arrays used throughout the VM
-int sp, bp, pc, halt, numLines, curLex, *stack, *registerFile;
-struct instruction *ir, **code;
-FILE *opr;
-
-char *oper[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio",
-    "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq", "lss",
-    "leq", "gtr", "geq"};
-
 
 int main(int argc, char *argv[]) {   
 
     // Instantiation of Global variables
-    sp = 0;
-    bp = 1;
-    pc = 0;
-    ir = 0;
-    stack = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
-    registerFile = calloc(NUM_REGISTERS, sizeof(int));
-    halt = 1;
-    numLines = 0;
+    int sp = 0;
+    int bp = 1;
+    int pc = 0;
+    struct instruction ir, *code;
+    int* stack = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
+    int* registerFile = calloc(NUM_REGISTERS, sizeof(int));
+    int halt = 1;
+    int numLines = 0;
+
     //Keeps track of legicographical level for printing purposes
-    curLex = 0;
+    int curLex = 0;
+
+    // Used for Input and Output files
+    FILE* ipr;
+    // FILE must be static because otherwise it can't be assigned to stdout
+    static FILE* opr;
 
     // If display is entered before the file to be read when running the program, stack trace is printed to console
     // Otherwise, file is read normally and stack trace is printed to output.txt
@@ -39,9 +36,13 @@ int main(int argc, char *argv[]) {
         opr = stdout;
         inFile = argv[2];
     } else {
-        printf("%s\n", argv[1]);
         inFile = argv[1];
-        char outFile[] = "output.txt";
+        char* outFile;
+        if (argv[2] == NULL) {
+            outFile = "output.txt";
+        } else {
+            outFile = argv[2];
+        }
         opr = fopen(outFile, "w");
         if(opr == NULL) {
             fprintf(stderr, "Could not find valid file by name: %s \n", outFile);
@@ -49,21 +50,24 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    
-	FILE *ipr = fopen(inFile, "r");
+	ipr = fopen(inFile, "r");
 	if(ipr == NULL) {
 		fprintf(stderr, "Could not find valid file by name: %s \n", inFile);
 		return 0;
 	}
 
+    // List of all possible operations the Virtual Machines can perform
+    char *operations[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio",
+    "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq", "lss",
+    "leq", "gtr", "geq"};
 
-	if(readInstructions(ipr) == 1) {
+    fprintf(opr, "Line    Op    R   L    M \n");
+	if(readInstructions(&code, ipr, opr, operations, &numLines) == 1) {
 		fprintf(stderr, "Program too long for machine to run.");
 		return 0;
 	}
     fclose(ipr);
 
-	printInstructions();
 	fprintf(opr, "\n\n                          pc    bp    sp    registers\n");
 	fprintf(opr, "Initial values:           %d     %d     %d   ", pc,bp,sp);
     for (int i = 0; i < NUM_REGISTERS; i++) {
@@ -79,89 +83,167 @@ int main(int argc, char *argv[]) {
 		// Fetch
 		ir = code[pc];
         tmpPc = pc;
+        pc++;
 		// Execute
         // sysOp is repeated intentionally to comply with specs given in the HW file.
-		switch (ir->op) {
-			case 1:
-				literal(ir->r, ir->m);
+		switch (ir.op) {
+			case 1: // LIT
+                if (ir.r < 0 || ir.r >= NUM_REGISTERS) {
+                    INVALID_REGISTER
+                    return 0;
+                } else {
+                    registerFile[ir.r] = ir.m;
+                }
                 break;
-			case 2:
-				ret();
+			case 2: // RET
+				if (bp != 1) {
+                    sp = bp - 1;
+                    bp = stack[sp + 3];
+                    pc = stack[sp + 4];
+                    curLex--;
+                }
                 break;
-			case 3:
-				load(ir->r, ir->l, ir->m);
+			case 3: // LOD
+                if (ir.r < 0 || ir.r >= NUM_REGISTERS) {
+                    INVALID_REGISTER
+                    return 0;
+                }
+                if (base(stack, ir.l, bp) + ir.m >= MAX_DATASTACK_HEIGHT) {
+                    OUT_OF_BOUNDS
+                    return 0;
+                } else if (base(stack, ir.l, bp) + ir.m > 0) {
+
+                    registerFile[ir.r] = stack[base(stack, ir.l, bp) + ir.m];
+
+                } else {
+                    OUT_OF_BOUNDS
+                    return 0;
+                }
                 break;
-			case 4:
-				store(ir->r, ir->l, ir->m);
+			case 4: // STO
+				if (ir.r < 0 || ir.r >= NUM_REGISTERS) {
+                    INVALID_REGISTER
+                    return 0;
+                }
+                if (base(stack, ir.l, bp) + ir.m >= MAX_DATASTACK_HEIGHT) {
+                    STACK_OVERFLOW
+                    return 0;
+                } else if (base(stack, ir.l, bp) + ir.m > 0) {
+
+                    stack[base(stack, ir.l, bp) + ir.m] = registerFile[ir.r];
+
+                } else {
+                    OUT_OF_BOUNDS
+                    return 0;
+                }
                 break;
-			case 5:
-				call(ir->l, ir->m);
+			case 5: // CAL
+				if (sp + 4 >= MAX_DATASTACK_HEIGHT) {
+                    STACK_OVERFLOW
+                    return 0;
+                } else {
+                    stack[sp + 1] = 0;
+                    stack[sp + 2] = base(stack, ir.l, bp);
+                    stack[sp + 3] = bp;
+                    stack[sp + 4] = pc;
+                    bp = sp + 1;
+
+                    curLex++;
+                }
                 break;
-			case 6:
-				inc(ir->m);
+			case 6: // INC
+				if (sp + ir.m >= MAX_DATASTACK_HEIGHT) {
+                    STACK_OVERFLOW
+                    return 0;
+                } else {
+                    sp += ir.m;
+                }
                 break;
-			case 7:
-				jump(ir->m);
+			case 7: // JMP
+				// Throws an error and stops the program if given line of code doesn't exist
+                if (ir.m < 0 || ir.m >= numLines) {
+                    BAD_INSTRUCTION
+                    return 0;
+                }
+                pc = ir.m;
                 break;
-			case 8:
-				jmpIfZero(ir->r, ir->m);
+			case 8: // JPC
+				// Throws an error and stops the program if given line of code doesn't exist
+                if (ir.m < 0 || ir.m >= numLines) {
+                    BAD_INSTRUCTION
+                    return 0;
+                }
+                if(registerFile[ir.r] == 0) {
+                    pc = ir.m;
+                }
                 break;
-			case 9:
-				sysOp(ir->r, ir->m);
+			case 9: // SIO
+				switch (ir.m) {
+                    case 1: // WRITE
+                    //TODO write function
+                        break;
+                    case 2: // READ
+                    //TODO read function
+                        break;
+                    case 3: // HALT
+                        HALT
+                        break;
+                    default:
+                        BAD_OPERATION
+                        return 0;
+                    break;
+                }
                 break;
-            case 10:
-                negate(ir->r, ir->m);
+            case 10: // NEG
+                //TODO negate function
                 break;
-            case 11:
-                add(ir->r, ir->l, ir->m);
+            case 11: // ADD
+                //TODO add function
                 break;
-            case 12:
-                sub(ir->r, ir->l, ir->m);
+            case 12: // SUB
+                //TODO subtract function
                 break;
-            case 13:
-                multiply(ir->r, ir->l, ir->m);
+            case 13: // MUL
+                //TODO multiply function
                 break;
-            case 14:
-                divide(ir->r, ir->l, ir->m);
+            case 14: // DIV
+                //TODO divide function
                 break;
-            case 15:
-                odd(ir->r, ir->m);
+            case 15: // ODD
+                //TODO odd function
                 break;
-            case 16:
-                mod(ir->r, ir->l, ir->m);
+            case 16: // MOD
+                //TODO modulus function
                 break;
-            case 17:
-                equal(ir->r, ir->l, ir->m);
+            case 17: // EQL
+                //TODO equal function
                 break;
-            case 18:
-                notEqual(ir->r, ir->l, ir->m);
+            case 18: // NEQ
+                //TODO not equal function
                 break;
-            case 19:
-                less(ir->r, ir->l, ir->m);
+            case 19: // LSS
+                //TODO less than function
                 break;
-            case 20:
-                lessOrEqual(ir->r, ir->l, ir->m);             
+            case 20: // LEQ
+                //TODO less than or equal to function           
                 break;
-            case 21:
-                greater(ir->r, ir->l, ir->m);
+            case 21: // GTR
+                //TODO greater than function
                 break;
-            case 22:
-                greaterOrEqual(ir->r, ir->l, ir->m);
+            case 22: // GEQ
+                //TODO greater than or equal to function
                 break;
             default:
                 BAD_OPERATION
                 HALT
                 break;
 		}
-
-        // Increments the Program Counter
-        pc++;
-        
-		printState(tmpPc, curLex);
+        // Prints out current state of the machine
+		printState(stack, tmpPc, ir, pc, bp, sp, registerFile, curLex, opr, operations);
 	}
 
     // Frees all remaining pointers on the heap
-    destroyCode(code, numLines);
+    free(code);
     free(stack);
     free(registerFile);
     if(strcmp("display",argv[1])) {
@@ -171,264 +253,86 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-// Methods for each ISA input
-void literal(int reg, int val) {
-    if (reg < 0 || reg >= NUM_REGISTERS) {
-        INVALID_REGISTER
-        HALT
-    } else {
-        registerFile[reg] = val;
-    }
-
-}
-void ret() {
-    if (bp != 1) {
-        sp = bp - 1;
-        bp = stack[sp + 3];
-        pc = stack[sp + 4];
-        curLex--;
-    }
-
-}
-void load(int reg, int lex, int offset) {
-    int place = base(lex, bp) + offset;
-
-    if (reg < 0 || reg >= NUM_REGISTERS) {
-        INVALID_REGISTER
-        HALT
-    }
-    if (place >= MAX_DATASTACK_HEIGHT) {
-        OUT_OF_BOUNDS
-        HALT
-    } else if (place > 0) {
-        registerFile[reg] = stack[place];
-    } else {
-       OUT_OF_BOUNDS
-        HALT
-    }
-    
-}
-void store(int reg, int lex, int offset) {
-    if (reg < 0 || reg >= NUM_REGISTERS) {
-        INVALID_REGISTER
-        HALT
-    }
-    int place = base(lex, bp) + offset;
-    if (place >= MAX_DATASTACK_HEIGHT) {
-        STACK_OVERFLOW
-        HALT
-    } else if (place > 0) {
-        stack[place] = registerFile[reg];
-    } else {
-        OUT_OF_BOUNDS
-        HALT
-    }
-    
-}
-void call(int lex, int loc) {
-    if (sp + 4 >= MAX_DATASTACK_HEIGHT) {
-        STACK_OVERFLOW
-        HALT
-    } else {
-        stack[sp + 1] = 0;
-        stack[sp + 2] = base(lex, bp);
-        stack[sp + 3] = bp;
-        stack[sp + 4] = pc;
-        bp = sp + 1;
-        // Subtracts 1 to offset global pc increment
-        pc = loc - 1;
-
-        curLex++;
-    }
-
-}
-void inc(int numLocals) {
-
-    if (sp + numLocals >= MAX_DATASTACK_HEIGHT) {
-        STACK_OVERFLOW
-        HALT
-    } else {
-        sp += numLocals;
-    }
-        
-}
-void jump(int loc) {
-    // Throws an error and stops the program if given line of code doesn't exist
-    if (loc < 0 || loc >= numLines) {
-        BAD_INSTRUCTION
-        HALT
-    }
-    // Subtracts 1 to offset global pc increment
-    pc = loc - 1;
-}
-void jmpIfZero(int reg, int loc) {
-
-    // Throws an error and stops the program if given line of code doesn't exist
-    if (loc < 0 || loc >= numLines) {
-        BAD_INSTRUCTION
-        HALT
-    }
-
-    if(registerFile[reg] == 0) {
-        // Subtracts 1 to offset global pc increment
-        pc = loc - 1;
-    }
-    sp++;
-}
-void sysOp(int reg, int op) {
-	switch (op) {
-		case 1:
-			write(reg);
-            break;
-		case 2:
-			read(reg);
-            break;
-		case 3:
-			end();
-            break;
-        default:
-            BAD_OPERATION
-            HALT
-            break;
-	}
-    
-}
-void negate(int stoReg, int froReg) {
-
-}
-void add(int stoReg, int reg1, int reg2) {
-
-}
-void sub(int stoReg, int reg1, int reg2) {
-
-}
-void multiply(int stoReg, int reg1, int reg2) {
-
-}
-void divide(int stoReg, int reg1, int reg2) {
-
-}
-void odd(int stoReg, int froReg) {
-
-}
-void mod(int stoReg, int reg1, int reg2) {
-
-}
-void equal(int stoReg, int reg1, int reg2) {
-
-}
-void notEqual(int stoReg, int reg1, int reg2) {
-
-}
-void less(int stoReg, int reg1, int reg2) {
-
-}
-void lessOrEqual(int stoReg, int reg1, int reg2) {
-
-}
-void greater(int stoReg, int reg1, int reg2) {
-
-}
-void greaterOrEqual(int stoReg, int reg1, int reg2) {
-
-}
-
-// Methods for each System Operation
-void write(int reg) {
-
-}
-void read(int reg) {
-
-}
-void end() {
-	HALT
-}
-
-
 // Method to separate the reading of the instructions from the rest of main
-int readInstructions(FILE* file) {
+int readInstructions(struct instruction** code, FILE* input, FILE* output, char** oper, int* lines) {
 
 	int tmpNum = 0;
 	int numCnt = 1;
-    // Initialize the code array and first instruction
-    code = malloc(sizeof(struct instruction*));
+    int numLines = *lines;
+    char buffer[8] = {};
+
+    // Initialize the code array with first instruction
     code[0] = malloc(sizeof(struct instruction));
-	//reads in from file 1 number at a time while keeping track of position and 
+	//reads in from input file 1 number at a time while keeping track of position and 
 	//line number.
-	while(fscanf(file, "%d", &tmpNum)==1) {
+	while(fscanf(input, "%d", &tmpNum)==1) {
 		if(numLines >= MAX_CODE_LENGTH) 
 			return 1;
 
 		if(numCnt % 4 == 1) {
-			code[numLines]->op = tmpNum;
+			code[0][numLines].op = tmpNum;
 		} else if(numCnt % 4 == 2) {
-			code[numLines]->r = tmpNum;
+			code[0][numLines].r = tmpNum;
 		} else if (numCnt % 4 == 3) {
-            code[numLines]->l = tmpNum;
+            code[0][numLines].l = tmpNum;
         } else {
-			code[numLines]->m = tmpNum;
-				numLines++;
-				numCnt=0;
-                // Re-size code array to fit next instruction
-                // Initializes next instruction
-            code = realloc(code, (numLines + 1) * sizeof(struct instruction*));
-            code[numLines] = malloc(sizeof(struct instruction));
+			code[0][numLines].m = tmpNum;
+            // Prints out newly added instruction
+            makeBuffer(buffer, numLines, 7);
+            fprintf(output, "%d%s%s    %d   %d    %d \n", numLines, buffer,
+             oper[(code[0][numLines].op) - 1], code[0][numLines].r, code[0][numLines].l, code[0][numLines].m);
+
+			numLines++;
+			numCnt=0;
+
+            // Re-size code array to fit next instruction
+            code[0] = realloc(code[0], (numLines + 1) * sizeof(struct instruction));
+            
 		}
 		numCnt++;
 	}
-    free(code[numLines]);
-    code = realloc(code, (numLines) * sizeof(struct instruction*));
+    code[0] = realloc(code[0], (numLines) * sizeof(struct instruction));
+    *lines = numLines;
 
 	return 0;
 }
-
-// Method to make printing of Instructions easier
-void printInstructions() {
-	//String array to translate from input number to corresponding operation 
-	fprintf(opr, "Line    Op    R   L    M \n");
-    char buffer[8] = {};
-	for(int i = 0; i < numLines; i++) {
-        makeBuffer(buffer, i, 7);
-		fprintf(opr, "%d%s%s    %d   %d    %d \n", i, buffer, oper[(code[i]->op) - 1], code[i]->r, code[i]->l, code[i]->m);
-	}
-
-}
 // Method used to print current state of the machine
-void printState(int curLoc, int l) {
+void printState(int* stack, int curLoc, struct instruction ir, int pc, int bp, int sp, int* regFile, int lex, FILE* output, char** oper) {
 
 //    fprintf(opr, "                          pc    bp    sp    registers\n");
     char *buffer = calloc(11, sizeof(char));
     // Prints out the current state with spacing determined by the number of digits
     // in the associated values.
     makeBuffer(buffer, curLoc, 4);
-    fprintf(opr, "%d%s", curLoc, buffer);
-    makeBuffer(buffer, ir->m, 11);
-    fprintf(opr, "%s  %d  %d  %d%s%d", oper[(ir->op)-1], ir->r, ir->l, ir->m, buffer, pc);
+    fprintf(output, "%d%s", curLoc, buffer);
+    makeBuffer(buffer, ir.m, 11);
+    fprintf(output, "%s  %d  %d  %d%s%d", oper[(ir.op)-1], ir.r, ir.l, ir.m, buffer, pc);
     makeBuffer(buffer, pc, 6);
-    fprintf(opr, "%s%d", buffer, bp);
+    fprintf(output, "%s%d", buffer, bp);
     makeBuffer(buffer, bp, 6);
-    fprintf(opr, "%s%d", buffer, sp);
+    fprintf(output, "%s%d", buffer, sp);
     makeBuffer(buffer, sp, 6);
-    fprintf(opr, "%s", buffer);
+    fprintf(output, "%s", buffer);
     
     // Prints out the current state of the register file
     for (int i = 0; i < NUM_REGISTERS; i++) {
-        makeBuffer(buffer, registerFile[i], 3);
-        fprintf(opr, "%d%s", registerFile[i], buffer);
+        makeBuffer(buffer, regFile[i], 3);
+        fprintf(output, "%d%s", regFile[i], buffer);
     }
-    fprintf(opr, "\nStack: ");
-    int lineCnt = l;
 
-    // Prints out the current state of the data-stack
+    // Prints out the current state of the stack
+    fprintf(output, "\nStack: ");
+    int lineCnt = lex;
+
 	for (int i = 1; i <= sp; i++) {
-        if (lineCnt > 0 && i == base(lineCnt - 1, bp)) {
-            fprintf(opr, "| %d ", stack[i]);
+        if (lineCnt > 0 && i == base(stack, lineCnt - 1, bp)) {
+            fprintf(output, "| %d ", stack[i]);
             lineCnt--;
         } else {
-            fprintf(opr, "%d ", stack[i]);
+            fprintf(output, "%d ", stack[i]);
         }
     }
-    fprintf(opr, "\n\n");
+    fprintf(output, "\n\n");
     free(buffer);
 }
 // Method used for formatting in the event a value requires 2 digits.
@@ -452,15 +356,8 @@ void makeBuffer(char *str, int num, int maxSize) {
         }
         str[offset] = '\0';
 }
-// Method used to free code array once program is complete.
-void destroyCode(struct instruction** ptr, int pLen) {
-    for (int i = 0; i < pLen; i++) {
-        free(ptr[i]);
-    }
-    free(ptr);
-}
 // Method used to redefine base in terms of requested lexicographical level
-int base(int l, int base) {
+int base(int* stack, int l, int base) {
 	int b1 = base;
 	while (l-- > 0) {
 		b1 = stack[b1 + 1];
