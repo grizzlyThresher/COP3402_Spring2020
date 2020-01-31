@@ -1,6 +1,6 @@
 # COP3402_Spring2020
 
-##Team Members:
+## Team Members:
 	
 	Owen Brahms
 	Michaela Green
