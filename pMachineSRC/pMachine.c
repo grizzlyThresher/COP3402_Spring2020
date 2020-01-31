@@ -148,6 +148,7 @@ int main(int argc, char *argv[]) {
                     stack[sp + 4] = pc;
                     bp = sp + 1;
 
+                    pc = ir.m;
                     curLex++;
                 }
                 break;
