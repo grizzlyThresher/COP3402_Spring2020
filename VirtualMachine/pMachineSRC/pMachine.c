@@ -1,5 +1,8 @@
-//Owen Brahms - 3739927
-//Michaela Green - 
+// Owen Brahms - 3739927
+// Michaela Green - 4198343
+// COP 3402, Spring 2020
+// Project 1
+
 #include "pMachine.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +21,7 @@ int main(int argc, char *argv[]) {
     int halt = 1;
     int numLines = 0;
 
-    //Keeps track of legicographical level for printing purposes
+    // Keeps track of legicographical level for printing purposes
     int curLex = 0;
 
     // Used for Input and Output files
