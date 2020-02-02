@@ -184,10 +184,12 @@ int main(int argc, char *argv[]) {
 			case 9: // SIO
 				switch (ir.m) {
                     case 1: // WRITE
-                    //TODO write function
+                    	printf("%d\n", registerFile[ir.r]);
                         break;
                     case 2: // READ
-                    //TODO read function
+	                    printf("Pleae input a number for the register: ");
+	                    scanf("%d", &registerFile[ir.r]);
+	                    printf("\n");
                         break;
                     case 3: // HALT
                         HALT
