@@ -72,9 +72,9 @@ int main(int argc, char *argv[]) {
     fclose(ipr);
 
 	fprintf(opr, "\n\n                          pc    bp    sp    registers\n");
-	fprintf(opr, "Initial values:           %d     %d     %d   ", pc,bp,sp);
+	fprintf(opr, "Initial values:           %d     %d     %d  ", pc,bp,sp);
     for (int i = 0; i < NUM_REGISTERS; i++) {
-        fprintf(opr, "  0");
+        fprintf(opr, "   0");
     }
     fprintf(opr, "\n\n");
 
@@ -91,12 +91,7 @@ int main(int argc, char *argv[]) {
         // sysOp is repeated intentionally to comply with specs given in the HW file.
 		switch (ir.op) {
 			case 1: // LIT
-                if (ir.r < 0 || ir.r >= NUM_REGISTERS) {
-                    INVALID_REGISTER
-                    return 0;
-                } else {
-                    registerFile[ir.r] = ir.m;
-                }
+                registerFile[ir.r] = ir.m;
                 break;
 			case 2: // RET
 				if (bp != 1) {
@@ -107,43 +102,35 @@ int main(int argc, char *argv[]) {
                 }
                 break;
 			case 3: // LOD
-                if (ir.r < 0 || ir.r >= NUM_REGISTERS) {
-                    INVALID_REGISTER
-                    return 0;
-                }
                 if (base(stack, ir.l, bp) + ir.m >= MAX_DATASTACK_HEIGHT) {
                     OUT_OF_BOUNDS
-                    return 0;
-                } else if (base(stack, ir.l, bp) + ir.m > 0) {
+                    halt = 0;
+                } else if (base(stack, ir.l, bp) + ir.m > 0 && base(stack, ir.l, bp) + ir.m <= sp) {
 
                     registerFile[ir.r] = stack[base(stack, ir.l, bp) + ir.m];
 
                 } else {
                     OUT_OF_BOUNDS
-                    return 0;
+                    halt = 0;
                 }
                 break;
 			case 4: // STO
-				if (ir.r < 0 || ir.r >= NUM_REGISTERS) {
-                    INVALID_REGISTER
-                    return 0;
-                }
                 if (base(stack, ir.l, bp) + ir.m >= MAX_DATASTACK_HEIGHT) {
                     STACK_OVERFLOW
-                    return 0;
-                } else if (base(stack, ir.l, bp) + ir.m > 0) {
+                    halt = 0;
+                } else if (base(stack, ir.l, bp) + ir.m > 0 && base(stack, ir.l, bp) + ir.m <= sp) {
 
                     stack[base(stack, ir.l, bp) + ir.m] = registerFile[ir.r];
 
                 } else {
                     OUT_OF_BOUNDS
-                    return 0;
+                    halt = 0;
                 }
                 break;
 			case 5: // CAL
 				if (sp + 4 >= MAX_DATASTACK_HEIGHT) {
                     STACK_OVERFLOW
-                    return 0;
+                    halt = 0;
                 } else {
                     stack[sp + 1] = 0;
                     stack[sp + 2] = base(stack, ir.l, bp);
@@ -158,25 +145,15 @@ int main(int argc, char *argv[]) {
 			case 6: // INC
 				if (sp + ir.m >= MAX_DATASTACK_HEIGHT) {
                     STACK_OVERFLOW
-                    return 0;
+                    halt = 0;
                 } else {
                     sp += ir.m;
                 }
                 break;
 			case 7: // JMP
-				// Throws an error and stops the program if given line of code doesn't exist
-                if (ir.m < 0 || ir.m >= numLines) {
-                    BAD_INSTRUCTION
-                    return 0;
-                }
                 pc = ir.m;
                 break;
 			case 8: // JPC
-				// Throws an error and stops the program if given line of code doesn't exist
-                if (ir.m < 0 || ir.m >= numLines) {
-                    BAD_INSTRUCTION
-                    return 0;
-                }
                 if(registerFile[ir.r] == 0) {
                     pc = ir.m;
                 }
@@ -190,8 +167,8 @@ int main(int argc, char *argv[]) {
 	                    printf("Please input a value: ");
 	                    scanf("%d", &registerFile[ir.r]);
                         break;
-                    case 3: // HALT
-                        HALT
+                    case 3: // halt = 0;
+                        halt = 0;
                         break;
                     default:
                         BAD_OPERATION
@@ -215,7 +192,7 @@ int main(int argc, char *argv[]) {
             	registerFile[ir.r] = registerFile[ir.l] / registerFile[ir.m];
                 break;
             case 15: // ODD
-            	registerFile[ir.r] = registerFile[ir.r] % 2;
+            	registerFile[ir.r] = registerFile[ir.m] % 2;
                 break;
             case 16: // MOD
             	registerFile[ir.r] = registerFile[ir.l] % registerFile[ir.m];
@@ -240,7 +217,7 @@ int main(int argc, char *argv[]) {
                 break;
             default:
                 BAD_OPERATION
-                HALT
+                return 0;
                 break;
 		}
         // Prints out current state of the machine
@@ -321,7 +298,7 @@ void printState(int* stack, int curLoc, struct instruction ir, int pc, int bp, i
     
     // Prints out the current state of the register file
     for (int i = 0; i < NUM_REGISTERS; i++) {
-        makeBuffer(buffer, regFile[i], 3);
+        makeBuffer(buffer, regFile[i], 4);
         fprintf(output, "%d%s", regFile[i], buffer);
     }
 

@@ -1,50 +1,58 @@
 Line    Op    R   L    M 
-0      lit    0   0    5 
-1      inc    0   0    3 
-2      sto    0   0    0 
-3      cal    0   0    4 
-4      inc    0   0    6 
-5      cal    0   0    7 
-6      sio    0   0    3 
-7      inc    0   0    6 
-8      add    0   1    2 
-9      sub    3   2    0 
-10     ret    0   0    0 
+0      jmp    0   0    19 
+1      inc    0   0    7 
+2      lod    0   1    1 
+3      sto    0   0    4 
+4      lod    1   1    0 
+5      sto    1   0    5 
+6      sio    0   0    2 
+7      sto    0   0    6 
+8      sio    1   0    2 
+9      sto    1   0    7 
+10     lod    2   0    6 
+11     lod    3   0    5 
+12     gtr    0   2    3 
+13     jpc    0   0    32 
+14     lod    2   0    4 
+15     lod    3   0    5 
+16     add    0   2    3 
+17     sto    0   0    0 
+18     lod    1   0    0 
+19     sto    1   1    1 
+20     ret    0   0    0 
+21     inc    0   0    2 
+22     lit    0   0    4 
+23     sto    0   0    0 
+24     lit    1   0    3 
+25     sto    1   0    1 
+26     cal    0   0    1 
+27     lod    0   0    0 
+28     sio    0   0    1 
+29     lod    1   0    1 
+30     sio    1   0    1 
+31     sio    0   0    3 
+32     lod    1   0    4 
+33     lod    2   0    5 
+34     lod    3   0    6 
+35     lod    4   0    7 
+36     sub    3   1    3 
+37     odd    0   0    3 
+38     jpc    0   0    40 
+39     mul    3   3    4 
+40     div    3   1    3 
+41     mod    0   3    2 
+42     jpc    0   0    44 
+43     neg    0   0    3 
+44     sto    0   0    5 
+45     jmp    0   0    14 
 
 
                           pc    bp    sp    registers
-Initial values:           0     1     0     0  0  0  0  0  0  0  0
+Initial values:           0     1     0     0   0   0   0   0   0   0   0
 
-0   lit  0  0  5          1     1     0     5  0  0  0  0  0  0  0  
+0   jmp  0  0  19         19    1     0     0   0   0   0   0   0   0   0   
 Stack: 
 
-1   inc  0  0  3          2     1     3     5  0  0  0  0  0  0  0  
-Stack: 0 0 0 
-
-2   sto  0  0  0          3     1     3     5  0  0  0  0  0  0  0  
-Stack: 5 0 0 
-
-3   cal  0  0  4          4     4     3     5  0  0  0  0  0  0  0  
-Stack: 5 0 0 
-
-4   inc  0  0  6          5     4     9     5  0  0  0  0  0  0  0  
-Stack: 5 0 0 | 0 1 1 4 0 0 
-
-5   cal  0  0  7          7     10    9     5  0  0  0  0  0  0  0  
-Stack: 5 0 0 | 0 1 1 4 0 0 
-
-7   inc  0  0  6          8     10    15    5  0  0  0  0  0  0  0  
-Stack: 5 0 0 | 0 1 1 4 0 0 | 0 4 4 6 0 0 
-
-8   add  0  1  2          9     10    15    5  0  0  0  0  0  0  0  
-Stack: 5 0 0 | 0 1 1 4 0 0 | 0 4 4 6 0 0 
-
-9   sub  3  2  0          10    10    15    5  0  0  0  0  0  0  0  
-Stack: 5 0 0 | 0 1 1 4 0 0 | 0 4 4 6 0 0 
-
-10  ret  0  0  0          6     4     9     5  0  0  0  0  0  0  0  
-Stack: 5 0 0 | 0 1 1 4 0 0 
-
-6   sio  0  0  3          7     4     9     5  0  0  0  0  0  0  0  
-Stack: 5 0 0 | 0 1 1 4 0 0 
+19  sto  1  1  1          20    1     0     0   0   0   0   0   0   0   0   
+Stack: 
 
