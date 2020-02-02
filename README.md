@@ -7,4 +7,4 @@
 
 ## Virtual Machine Information
 
-[Virtual Machine Readme](./VirtualMachine/README)
+[Virtual Machine Readme](/VirtualMachine/README)
