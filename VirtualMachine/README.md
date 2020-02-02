@@ -31,3 +31,61 @@ You have several options for running the machine:
 5. You may run "make show" from your terminal. This will run the machine using the provided "test.txt"
 	file and print the results to the terminal.
 
+## Included ISA
+
+NOTE: All SIO commands are mapped to 9. Change test cases accordingly.
+
+01. LIT R, 0, M   reg[R] <- M
+
+02. RTN 0, 0, 0   sp <- bp - 1
+                  bp <- stack[sp + 3]
+                  pc <- stack[sp + 4]
+
+03. LOD R, L, M   reg[R] <- stack[base(L, bp) + M]
+
+04. STO R, L, M   stack[base(L, bp) + M] <- R[i]
+
+05. CAL 0, L, M   stack[sp + 1] <- 0
+                  stack[sp + 2] <- base(L, bp)
+                  stack[sp + 3] <- bp
+                  stack[sp + 4] <- pc
+                  bp <- sp + 1
+                  pc <- M
+
+06. INC 0, 0, M   sp <- sp + M
+
+07. JMP R, 0, M   pc <- M
+
+08. JPC R, 0, M   if reg[R] == 0, then pc <- M
+
+09. SIO R, 0, 1   print reg[R]
+
+09. SIO R, 0, 2   read input to reg[R]
+
+09. SIO R, 0, 3   set halt flag to one (end of program)
+
+10. NEG           reg[R] <- -reg[R]
+
+11. ADD           reg[R] <- reg[L] + reg[M]
+
+12. SUB           reg[R] <- reg[L] - reg[M]
+
+13. MUL           reg[R] <- reg[L] * reg[M]
+
+14. DIV           reg[R] <- reg[L] * reg[M]
+
+15. ODD           reg[R] <- reg[R] % 2
+
+16. MOD           reg[R] <- reg[L] % reg[M]
+
+17. EQL           reg[R] <- reg[L] == reg[M]
+
+18. NEQ           reg[R] <- reg[L] != reg[M]
+
+19. LSS           reg[R] <- reg[L] < reg[M]
+
+20. LEQ           reg[R] <- reg[L] <= reg[M]
+
+21. GTR           reg[R] <- reg[L] > reg[M]
+
+22. GEQ           reg[R] <- reg[L] >= reg[M]
