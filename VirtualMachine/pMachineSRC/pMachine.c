@@ -187,9 +187,8 @@ int main(int argc, char *argv[]) {
                     	printf("%d\n", registerFile[ir.r]);
                         break;
                     case 2: // READ
-	                    printf("Pleae input a number for the register: ");
+	                    printf("Please input a value: ");
 	                    scanf("%d", &registerFile[ir.r]);
-	                    printf("\n");
                         break;
                     case 3: // HALT
                         HALT
