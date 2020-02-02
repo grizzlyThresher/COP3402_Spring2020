@@ -54,7 +54,7 @@ NOTE: All SIO commands are mapped to 9. Change test cases accordingly.
 
 06. INC 0, 0, M   sp <- sp + M
 
-07. JMP R, 0, M   pc <- M
+07. JMP 0, 0, M   pc <- M
 
 08. JPC R, 0, M   if reg[R] == 0, then pc <- M
 
