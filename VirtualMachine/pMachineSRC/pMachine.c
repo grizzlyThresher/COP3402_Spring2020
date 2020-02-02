@@ -199,43 +199,43 @@ int main(int argc, char *argv[]) {
                 }
                 break;
             case 10: // NEG
-                //TODO negate function
+            	registerFile[ir.r] = -1 * registerFile[ir.r];
                 break;
             case 11: // ADD
-                //TODO add function
+                registerFile[ir.r] = registerFile[ir.l] + registerFile[ir.m];
                 break;
             case 12: // SUB
-                //TODO subtract function
+            	registerFile[ir.r] = registerFile[ir.l] - registerFile[ir.m];
                 break;
             case 13: // MUL
-                //TODO multiply function
-                break;
+            	registerFile[ir.r] = registerFile[ir.l] * registerFile[ir.m];
+                break;	
             case 14: // DIV
-                //TODO divide function
+            	registerFile[ir.r] = registerFile[ir.l] / registerFile[ir.m];
                 break;
             case 15: // ODD
-                //TODO odd function
+            	registerFile[ir.r] = registerFile[ir.r] % 2;
                 break;
             case 16: // MOD
-                //TODO modulus function
+            	registerFile[ir.r] = registerFile[ir.l] % registerFile[ir.m];
                 break;
             case 17: // EQL
-                //TODO equal function
+            	registerFile[ir.r] = (registerFile[ir.l] == registerFile[ir.m]);
                 break;
             case 18: // NEQ
-                //TODO not equal function
+            	registerFile[ir.r] = (registerFile[ir.l] != registerFile[ir.m]);
                 break;
             case 19: // LSS
-                //TODO less than function
+            	registerFile[ir.r] = (registerFile[ir.l] < registerFile[ir.m]);
                 break;
             case 20: // LEQ
-                //TODO less than or equal to function           
+                registerFile[ir.r] = (registerFile[ir.l] <= registerFile[ir.m]);           
                 break;
             case 21: // GTR
-                //TODO greater than function
+            	registerFile[ir.r] = (registerFile[ir.l] > registerFile[ir.m]);
                 break;
             case 22: // GEQ
-                //TODO greater than or equal to function
+            	registerFile[ir.r] = (registerFile[ir.l] >= registerFile[ir.m]);
                 break;
             default:
                 BAD_OPERATION
