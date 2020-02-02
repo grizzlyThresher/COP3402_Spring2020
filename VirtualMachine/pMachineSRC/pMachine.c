@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     struct instruction ir, *code;
     int* stack = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
     int* registerFile = calloc(NUM_REGISTERS, sizeof(int));
-    int halt = 1;
+    int halt = 0;
     int numLines = 0;
 
     // Keeps track of legicographical level for printing purposes
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
     // Temp variable used to store pc value before execution
     int tmpPc = pc;
 
-	while(halt != 0) {
+	while(halt == 0) {
 		// Fetch
 		ir = code[pc];
         tmpPc = pc;
@@ -104,33 +104,33 @@ int main(int argc, char *argv[]) {
 			case 3: // LOD
                 if (base(stack, ir.l, bp) + ir.m >= MAX_DATASTACK_HEIGHT) {
                     OUT_OF_BOUNDS
-                    halt = 0;
+                    halt = 1;
                 } else if (base(stack, ir.l, bp) + ir.m > 0 && base(stack, ir.l, bp) + ir.m <= sp) {
 
                     registerFile[ir.r] = stack[base(stack, ir.l, bp) + ir.m];
 
                 } else {
                     OUT_OF_BOUNDS
-                    halt = 0;
+                    halt = 1;
                 }
                 break;
 			case 4: // STO
                 if (base(stack, ir.l, bp) + ir.m >= MAX_DATASTACK_HEIGHT) {
                     STACK_OVERFLOW
-                    halt = 0;
+                    halt = 1;
                 } else if (base(stack, ir.l, bp) + ir.m > 0 && base(stack, ir.l, bp) + ir.m <= sp) {
 
                     stack[base(stack, ir.l, bp) + ir.m] = registerFile[ir.r];
 
                 } else {
                     OUT_OF_BOUNDS
-                    halt = 0;
+                    halt = 1;
                 }
                 break;
 			case 5: // CAL
 				if (sp + 4 >= MAX_DATASTACK_HEIGHT) {
                     STACK_OVERFLOW
-                    halt = 0;
+                    halt = 1;
                 } else {
                     stack[sp + 1] = 0;
                     stack[sp + 2] = base(stack, ir.l, bp);
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
 			case 6: // INC
 				if (sp + ir.m >= MAX_DATASTACK_HEIGHT) {
                     STACK_OVERFLOW
-                    halt = 0;
+                    halt = 1;
                 } else {
                     sp += ir.m;
                 }
@@ -166,9 +166,10 @@ int main(int argc, char *argv[]) {
                     case 2: // READ
 	                    printf("Please input a value: ");
 	                    scanf("%d", &registerFile[ir.r]);
+                        fprintf(opr, "user input was: %d\n", registerFile[ir.r]);
                         break;
-                    case 3: // halt = 0;
-                        halt = 0;
+                    case 3: // halt = 1;
+                        halt = 1;
                         break;
                     default:
                         BAD_OPERATION
@@ -177,7 +178,7 @@ int main(int argc, char *argv[]) {
                 }
                 break;
             case 10: // NEG
-            	registerFile[ir.r] = -1 * registerFile[ir.r];
+            	registerFile[ir.r] = -1 * registerFile[ir.m];
                 break;
             case 11: // ADD
                 registerFile[ir.r] = registerFile[ir.l] + registerFile[ir.m];

@@ -7,22 +7,22 @@
 
 ## Compiling the Virtual Machine
 
-To compile, just run "make" in your terminal from the VirtualMachine directory, that will automatically compile everything in the
+To compile, just run "make" in your terminal from the VirtualMachine directory, that will compile everything in the
 pMachineSRC directory and provide the pMachine program.
 
 ## Running the Machine
 
 You have several options for running the machine:
 
-1. You may run "./pMachine INPUT_FILE" from your terminal. This will read in your input file
+1. You may run "./pMachine NAME_OF_INPUT_FILE" from your terminal. This will read in your input file
 	and print the results to a file labelled "output.txt".
 
-2. You may run "./pMachine INPUT_FILE OUTPUT_FILE" from your terminal. This will read in your
-	input file and print the results to the given output file.
+2. You may run "./pMachine NAME_OF_INPUT_FILE NAME_OF_OUTPUT_FILE" from your terminal.
+	This will read in your input file and print the results to the given output file.
 	WARNING: If you give an already existing filename for OUTPUT_FILE, it will get overwritten
 	with the program data, so be careful what you use.
 
-3. You may run "./pMachine display INPUT_FILE" from your terminal. This will read in your input
+3. You may run "./pMachine display NAME_OF_INPUT_FILE" from your terminal. This will read in your input
 	file and print the results to the terminal.
 
 4. You may run "make run" from your terminal. This will run the machine using the provided "test.txt"
@@ -31,9 +31,13 @@ You have several options for running the machine:
 5. You may run "make show" from your terminal. This will run the machine using the provided "test.txt"
 	file and print the results to the terminal.
 
+NOTE: All commands must be executed from the VirtualMachine directory after compilation.
+
 ## Included ISA
 
 NOTE: All SIO commands are mapped to 9. Change test cases accordingly.
+NOTE: The result of a logical operation such as A < B is 1 if the case is met
+	  and 0 otherwise.
 
 01. LIT R, 0, M   reg[R] <- M
 
