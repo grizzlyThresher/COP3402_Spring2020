@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
                 }
                 break;
             case 10: // NEG
-            	registerFile[ir.r] = -1 * registerFile[ir.m];
+            	registerFile[ir.r] = -1 * registerFile[ir.r];
                 break;
             case 11: // ADD
                 registerFile[ir.r] = registerFile[ir.l] + registerFile[ir.m];
