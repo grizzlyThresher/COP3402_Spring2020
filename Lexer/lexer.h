@@ -15,3 +15,5 @@ readsym , elsesym} token_type;
 void addLexeme(char *lex, int token);
 // Method used to print remainder of input file in the event of an error
 void printRest(FILE *input, FILE *output);
+// Method used to deal with spacing when printing the Lexeme Table
+void makeBuf(char buffer[], char* str, int bufLen);

@@ -89,24 +89,20 @@ int main(int argc, char *argv[]) {
 			case nulsym : // Handles all transitions from the start state.
 				switch (tmpC) {
 					case '+':
-						state = plussym;
-						buffer[varLength++] = '+';
+						addLexeme("+", plussym);
 						break;
 					case '-':
-						state = minussym;
-						buffer[varLength++] = '-';
+						addLexeme("-", minussym);
 						break;
 					case '*':
-						state = multsym;
-						buffer[varLength++] = '*';
+						addLexeme("*", multsym);
 						break;
 					case '/':
 						state = slashsym;
 						buffer[varLength++] = '/';
 						break;
 					case '=':
-						state = eqsym;
-						buffer[varLength++] = '=';
+						addLexeme("=", eqsym);
 						break;
 					case '<':
 						state = lessym;
@@ -117,24 +113,19 @@ int main(int argc, char *argv[]) {
 						buffer[varLength++] = '>';
 						break;
 					case '(':
-						state = lparentsym;
-						buffer[varLength++] = '(';
+						addLexeme("(", lparentsym);
 						break;
 					case ')':
-						state = rparentsym;
-						buffer[varLength++] = ')';
+						addLexeme(")", rparentsym);
 						break;
 					case ',':
-						state = commasym;
-						buffer[varLength++] = ',';
+						addLexeme(",", commasym);
 						break;
 					case ';':
-						state = semicolonsym;
-						buffer[varLength++] = ';';
+						addLexeme(";", semicolonsym);
 						break;
 					case '.':
-						state = periodsym;
-						buffer[varLength++] = '.';
+						addLexeme(".", periodsym);
 						break;
 					case ':':
 						state = becomessym;
@@ -152,13 +143,11 @@ int main(int argc, char *argv[]) {
 					default:
 						charAsString[0] = tmpC;
 						if (regexec(&letter, charAsString, 0, NULL, 0) == 0) {
-//							state = identsym;
+							state = identsym;
 							buffer[varLength++] = tmpC;
-							printf("LETTER\n");
 						} else if (regexec(&digit, charAsString, 0, NULL, 0) == 0) {
 							state = numbersym;
 							buffer[varLength++] = tmpC;
-							printf("NUMBER\n");
 						} else {
 							printRest(ipr, opr);
 							fprintf(opr, "Error: Unrecognized Token - \"%s\"\n", charAsString);
@@ -169,15 +158,89 @@ int main(int argc, char *argv[]) {
 				}
 				break;
 
+			case identsym :
+				if (varLength >= 11) {
+					printRest(ipr, opr);
+					fprintf(opr, "Error: Cannot have Identifier Longer than 11 characters - \"%s\"\n", buffer);
+					return 0;
+				}
+
+				charAsString[0] = tmpC;
+				if ((regexec(&letter, charAsString, 0, NULL, 0) == 0) ||
+				 regexec(&digit, charAsString, 0, NULL, 0) == 0) {
+					buffer[varLength++] = tmpC;
+				} else {
+					ungetc(tmpC, ipr);
+					ungot = 1;
+					state = nulsym;
+					if (strcmp(buffer,  "odd") == 0) {
+						addLexeme(buffer, oddsym);
+					} else if (strcmp(buffer, "begin") == 0) {
+						addLexeme(buffer, beginsym);
+					} else if (strcmp(buffer, "end") == 0) {
+						addLexeme(buffer, endsym);
+					} else if (strcmp(buffer, "if") == 0) {
+						addLexeme(buffer, ifsym);
+					} else if (strcmp(buffer, "then") == 0) {
+						addLexeme(buffer, thensym);
+					} else if (strcmp(buffer, "while") == 0) {
+						addLexeme(buffer, whilesym);
+					} else if (strcmp(buffer, "do") == 0) {
+						addLexeme(buffer, dosym);
+					} else if (strcmp(buffer, "call") == 0) {
+						addLexeme(buffer, callsym);
+					} else if (strcmp(buffer, "const") == 0) {
+						addLexeme(buffer, constsym);
+					} else if (strcmp(buffer, "var") == 0) {
+						addLexeme(buffer, varsym);
+					} else if (strcmp(buffer, "procedure") == 0) {
+						addLexeme(buffer, procsym);
+					} else if (strcmp(buffer, "write") == 0) {
+						addLexeme(buffer, writesym);
+					} else if (strcmp(buffer, "read") == 0) {
+						addLexeme(buffer, readsym);
+					} else if (strcmp(buffer, "else") == 0) {
+						addLexeme(buffer, elsesym);
+					} else {
+						addLexeme(buffer, identsym);
+					}
+
+					// Resets buffer back to empty in preparation for next pass through the lexer.
+					memset(buffer, 0, strlen(buffer));
+					varLength = 0;
+
+				}
+				break;
+
 		}
 
 		if (ungot == 0) {
 			fprintf(opr, "%c", tmpC);
-			printf("%c\n", tmpC);
 		}
 
 	} while(1);
+	fprintf(opr, "\n\n\n");
+	fprintf(opr, "Lexeme Table:\nlexeme           token type\n");
+
+	char buf[17];
+
+	// Prints out Lexeme Table. Lexeme followed by spaces followed by the associate token
+	for(int i = 0; i < numTokens; i++) {
+		makeBuf(buf, lexemes[i], 17);
+		fprintf(opr, "%s%s%d\n", lexemes[i], buf, tokens[i]);
+	}
+	fprintf(opr, "\n\nLexeme List:\n");
+
+	//Prints out Lexeme List. Tokens, with Lexeme following if identifier or number
+	for (int i = 0; i < numTokens; i++) {
+		if (tokens[i] == 2 || tokens[i] == 3) {
+			fprintf(opr, "%d|%s|", tokens[i], lexemes[i]);
+		} else {
+			fprintf(opr, "%d|", tokens[i]);
+		}
+	}
 	fprintf(opr, "\n");
+
 
 	fclose(ipr);
 	if (strcmp("display",argv[1]) != 0)
@@ -188,6 +251,8 @@ int main(int argc, char *argv[]) {
 
 // Method used to add to Token and Lexeme Lists
 void addLexeme (char* lex, int token) {
+	// Increases number of tokens, increases the size of the tokens array and
+	// lexemes array, adds the new token and new lexeme.
 	numTokens++;
 	tokens = realloc(tokens, numTokens * sizeof(int));
 	tokens[numTokens-1] = token;
@@ -199,4 +264,13 @@ void addLexeme (char* lex, int token) {
 // Method used to print remainder of input file in the event of an error
 void printRest(FILE *input, FILE *output) {
 
+}
+
+void makeBuf(char buffer[], char* str, int bufLen) {
+	if (bufLen >= strlen(str)) {
+		for (int i = 0; i < (bufLen - strlen(str)); i++) {
+			buffer[i] = ' ';
+		}
+		buffer[bufLen-strlen(str)] = '\0';
+	}
 }
