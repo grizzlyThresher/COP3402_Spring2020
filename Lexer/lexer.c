@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 
 	enum token_type state = nulsym;
 
-	fprintf(opr, "\n");
+	fprintf(opr, "Source Program:\n");
 
 	int ungot = 0;
 	int varLength = 0;
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
 				}
 				break;
 
-			case identsym :
+			case identsym : // Handles all transitions for potential identifiers and reserved words.
 				if (varLength >= 11) {
 					printRest(ipr, opr);
 					fprintf(opr, "Error: Cannot have Identifier Longer than 11 characters - \"%s\"\n", buffer);
