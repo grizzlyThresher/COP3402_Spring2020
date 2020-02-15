@@ -9,8 +9,9 @@
 #include <regex.h>
 #include "lexer.h"
 
-int *tokens, numTokens;
-char **lexemes;
+int numTokens, numErrors, numLines;
+lexeme **lexemes;
+error **errorList;
 
 int main(int argc, char *argv[]) {
 
@@ -65,19 +66,22 @@ int main(int argc, char *argv[]) {
 	}
 
 	char tmpC;
-	char *buffer = calloc((MAX_VAR_LENGTH) + 1, sizeof(char));
 	
 	// Used to to store individual chars as a string for
 	// pattern matching purposes
 	char *charAsString = calloc(2, sizeof(char));
+	
 
-	enum token_type state = nulsym;
+	token_type state = nulsym;
 
 	fprintf(opr, "Source Program:\n");
 
 	int ungot = 0;
 	int varLength = 0;
 	numTokens = 0;
+	numLines = 1;
+	numErrors = 0;
+	char *buffer = malloc(varLength * sizeof(char));
 	do {
 
 		tmpC = fgetc(ipr);
@@ -99,18 +103,24 @@ int main(int argc, char *argv[]) {
 						break;
 					case '/':
 						state = slashsym;
-						buffer[varLength++] = '/';
+						varLength++;
+						buffer = realloc(buffer, varLength * sizeof(char));
+						buffer[varLength - 1] = '/';
 						break;
 					case '=':
 						addLexeme("=", eqsym);
 						break;
 					case '<':
 						state = lessym;
-						buffer[varLength++] = '<';
+						varLength++;
+						buffer = realloc(buffer, varLength * sizeof(char));
+						buffer[varLength - 1] = '<';
 						break;
 					case '>':
 						state = gtrsym;
-						buffer[varLength++] = '>';
+						varLength++;
+						buffer = realloc(buffer, varLength * sizeof(char));
+						buffer[varLength - 1] = '>';
 						break;
 					case '(':
 						addLexeme("(", lparentsym);
@@ -129,11 +139,14 @@ int main(int argc, char *argv[]) {
 						break;
 					case ':':
 						state = becomessym;
-						buffer[varLength++] = ':';
+						varLength++;
+						buffer = realloc(buffer, varLength * sizeof(char));
+						buffer[varLength - 1] = ':';
 						break;
+					case '\n':
+						numLines++;
 					case ' ':
 					case '\t':
-					case '\n':
 						state = nulsym;
 						break;
 
@@ -144,14 +157,17 @@ int main(int argc, char *argv[]) {
 						charAsString[0] = tmpC;
 						if (regexec(&letter, charAsString, 0, NULL, 0) == 0) {
 							state = identsym;
-							buffer[varLength++] = tmpC;
+							varLength++;
+							buffer = realloc(buffer, varLength * sizeof(char));
+							buffer[varLength - 1] = tmpC;
 						} else if (regexec(&digit, charAsString, 0, NULL, 0) == 0) {
 							state = numbersym;
-							buffer[varLength++] = tmpC;
+							varLength++;
+							buffer = realloc(buffer, varLength * sizeof(char));
+							buffer[varLength - 1] = tmpC;
 						} else {
-							printRest(ipr, opr);
-							fprintf(opr, "Error: Unrecognized Token - \"%s\"\n", charAsString);
-							return 0;
+							addError(charAsString, invalidSymbolError, numLines);
+							state = nulsym;
 						}
 						break;
 
@@ -159,21 +175,22 @@ int main(int argc, char *argv[]) {
 				break;
 
 			case identsym : // Handles all transitions for potential identifiers and reserved words.
-				if (varLength >= 11) {
-					printRest(ipr, opr);
-					fprintf(opr, "Error: Cannot have Identifier Longer than 11 characters - \"%s\"\n", buffer);
-					return 0;
-				}
 
 				charAsString[0] = tmpC;
 				if ((regexec(&letter, charAsString, 0, NULL, 0) == 0) ||
 				 regexec(&digit, charAsString, 0, NULL, 0) == 0) {
-					buffer[varLength++] = tmpC;
+					varLength++;
+					buffer = realloc(buffer, varLength * sizeof(char));
+					buffer[varLength - 1] = tmpC;
 				} else {
 					ungetc(tmpC, ipr);
 					ungot = 1;
 					state = nulsym;
-					if (strcmp(buffer,  "odd") == 0) {
+					buffer = realloc(buffer, (varLength + 1) * sizeof(char));
+					buffer[varLength] = '\0';
+					if (varLength > MAX_VAR_LENGTH){
+						addError(buffer, varLengthError, numLines);
+					} else if (strcmp(buffer,  "odd") == 0) {
 						addLexeme(buffer, oddsym);
 					} else if (strcmp(buffer, "begin") == 0) {
 						addLexeme(buffer, beginsym);
@@ -206,8 +223,8 @@ int main(int argc, char *argv[]) {
 					}
 
 					// Resets buffer back to empty in preparation for next pass through the lexer.
-					memset(buffer, 0, strlen(buffer));
 					varLength = 0;
+					buffer = realloc(buffer, varLength * sizeof(char));
 
 				}
 				break;
@@ -220,27 +237,46 @@ int main(int argc, char *argv[]) {
 
 	} while(1);
 	fprintf(opr, "\n\n\n");
-	fprintf(opr, "Lexeme Table:\nlexeme           token type\n");
-
-	char buf[17];
-
-	// Prints out Lexeme Table. Lexeme followed by spaces followed by the associate token
-	for(int i = 0; i < numTokens; i++) {
-		makeBuf(buf, lexemes[i], 17);
-		fprintf(opr, "%s%s%d\n", lexemes[i], buf, tokens[i]);
-	}
-	fprintf(opr, "\n\nLexeme List:\n");
-
-	//Prints out Lexeme List. Tokens, with Lexeme following if identifier or number
-	for (int i = 0; i < numTokens; i++) {
-		if (tokens[i] == 2 || tokens[i] == 3) {
-			fprintf(opr, "%d|%s|", tokens[i], lexemes[i]);
-		} else {
-			fprintf(opr, "%d|", tokens[i]);
+	if (numErrors >= 1) {
+		for (int i = 0; i < numErrors; i++) {
+			fprintf(opr, "Error at Line (%d) : ", errorList[i]->lineNum);
+			switch (errorList[i]->type) {
+				case numLengthError :
+				fprintf(opr, "Number Longer Than %d Digits - %s\n", MAX_NUM_LENGTH, errorList[i]->value);
+				break;
+				case varLengthError :
+				fprintf(opr, "Variable Longer Than %d Characters - \"%s\"\n", MAX_VAR_LENGTH, errorList[i]->value);
+				break;
+				case invalidSymbolError :
+				fprintf(opr, "Unidentified Symbol - \"%s\"\n",errorList[i]->value);
+				break;
+				case openCommentError :
+				fprintf(opr, "Open Comment Never Closed\n");
+				break;
+			}
 		}
-	}
-	fprintf(opr, "\n");
+	} else {
+		fprintf(opr, "Lexeme Table:\nlexeme           token type\n");
 
+		char buf[17];
+
+		// Prints out Lexeme Table. Lexeme followed by spaces followed by the associate token
+		for(int i = 0; i < numTokens; i++) {
+			makeBuf(buf, lexemes[i]->value, 17);
+			fprintf(opr, "%s%s%d\n", lexemes[i]->value, buf, lexemes[i]->token);
+		}
+		fprintf(opr, "\n\nLexeme List:\n");
+
+		//Prints out Lexeme List. Tokens, with Lexeme following if identifier or number
+		for (int i = 0; i < numTokens; i++) {
+			if (lexemes[i]->token == identsym || lexemes[i]->token == numbersym) {
+				fprintf(opr, "%d|%s|", lexemes[i]->token, lexemes[i]->value);
+			} else {
+				fprintf(opr, "%d|", lexemes[i]->token);
+			}
+		}
+		fprintf(opr, "\n");
+	}
 
 	fclose(ipr);
 	if (strcmp("display",argv[1]) != 0)
@@ -250,20 +286,15 @@ int main(int argc, char *argv[]) {
 }
 
 // Method used to add to Token and Lexeme Lists
-void addLexeme (char* lex, int token) {
+void addLexeme (char* lex, token_type token) {
 	// Increases number of tokens, increases the size of the tokens array and
 	// lexemes array, adds the new token and new lexeme.
 	numTokens++;
-	tokens = realloc(tokens, numTokens * sizeof(int));
-	tokens[numTokens-1] = token;
-	lexemes = realloc(lexemes, numTokens * sizeof(char*));
-	lexemes[numTokens-1] = malloc((strlen(lex)) * sizeof(char));
-	strcpy(lexemes[numTokens-1], lex);
-}
-
-// Method used to print remainder of input file in the event of an error
-void printRest(FILE *input, FILE *output) {
-
+	lexemes = realloc(lexemes, numTokens * sizeof(lexeme*));
+	lexemes[numTokens-1] = malloc(sizeof(lexeme));
+	lexemes[numTokens-1]->token = token;
+	lexemes[numTokens-1]->value = malloc((strlen(lex)) * sizeof(char));
+	strcpy(lexemes[numTokens-1]->value, lex);
 }
 
 void makeBuf(char buffer[], char* str, int bufLen) {
@@ -273,4 +304,14 @@ void makeBuf(char buffer[], char* str, int bufLen) {
 		}
 		buffer[bufLen-strlen(str)] = '\0';
 	}
+}
+
+void addError(char* str, error_type type, int lineNum) {
+	numErrors++;
+	errorList = realloc(errorList, numErrors * sizeof(error*));
+	errorList[numErrors - 1] = malloc(sizeof(error));
+	errorList[numErrors - 1]->type = type;
+	errorList[numErrors - 1]->lineNum = lineNum;
+	errorList[numErrors - 1]->value = malloc(strlen(str) * sizeof(char));
+	strcpy(errorList[numErrors - 1]->value, str);
 }

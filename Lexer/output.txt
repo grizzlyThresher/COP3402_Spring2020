@@ -1,23 +1,12 @@
 Source Program:
-var x,y,a;
-begin
+var x,y,a; abcdefghijklmnop
+begin % $ #
 	y:= x +a;
 	x:= y + 56;
 end.
 
 
-Lexeme Table:
-lexeme           token type
-var              29
-x                2
-,                17
-y                2
-,                17
-a                2
-;                18
-begin            21
-y                2
-
-
-Lexeme List:
-29|2|x|17|2|y|17|2|a|18|21|2|y|
+Error at Line (1) : Variable Longer Than 11 Characters - "abcdefghijklmnop"
+Error at Line (2) : Unidentified Symbol - "%"
+Error at Line (2) : Unidentified Symbol - "$"
+Error at Line (2) : Unidentified Symbol - "#"
