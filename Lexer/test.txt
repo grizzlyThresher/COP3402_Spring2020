@@ -1,5 +1,6 @@
 var x,y,a;
-begin
+begin /*
 	y:= x +a;
 	x:= y + 56;
+	 %
 end.

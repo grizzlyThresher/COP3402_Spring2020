@@ -91,16 +91,24 @@ int main(int argc, char *argv[]) {
 
 		ungot = 0;
 		switch (state) {
+
 			case comment :
 				if (tmpC == '*') {
 					almostEnding = 1;
 					state = comment;
 				} else if ((tmpC == '/') && (almostEnding == 1)) {
+					free(errorList[--numErrors]->value);
+					free(errorList[numErrors]);
+					errorList = realloc(errorList, numErrors * sizeof(error*));
 					state = nulsym;
+				} else if (tmpC == '\n') {
+					numLines++;
+					almostEnding = 0;
+					state = comment;
 				} else {
 					almostEnding = 0;
 					state = comment;
-				}
+				} 
 				break;
 
 			case nulsym : // Handles all transitions from the start state.
@@ -232,6 +240,7 @@ int main(int argc, char *argv[]) {
             case slashsym :
             	if (tmpC == '*')
             	{
+            		addError("", openCommentError, numLines);
        				almostEnding = 0;
             		state = comment;
             	} else {
@@ -284,9 +293,6 @@ int main(int argc, char *argv[]) {
 			fprintf(opr, "%c", tmpC);
 		}
 	} while(1);
-
-	if (state == comment)
-		addError("", openCommentError, numLines);
 
 	fprintf(opr, "\n\n\n");
 	if (numErrors >= 1) {
