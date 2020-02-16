@@ -35,8 +35,9 @@ int main(int argc, char *argv[]) {
     }
 
 
-    // If display is entered before the file to be read when running the program, stack trace is printed to console
-    // Otherwise, file is read normally and stack trace is printed to output.txt
+    // If display is entered before the file to be read when running the program, lexer output is printed to console
+    // Otherwise, file is read normally and lexer output goes to specified output file. 
+    // If no output file is specified, system defaults to output.txt
     char *inFile;
     if (argv[1] == NULL) {
         fprintf(stderr, "System requires either command or file name.\n");
@@ -93,20 +94,20 @@ int main(int argc, char *argv[]) {
 		ungot = 0;
 		switch (state) {
 
-			case comment :
-				if (tmpC == '*') {
+			case comment : // Handles all comment
+				if (tmpC == '*') { // If we read in a *, a / will end the comment
 					almostEnding = 1;
 					state = comment;
-				} else if ((tmpC == '/') && (almostEnding == 1)) {
-					free(errorList[--numErrors]->value);
-					free(errorList[numErrors]);
+				} else if ((tmpC == '/') && (almostEnding == 1)) { // If the comment successfully closes, we remove
+					free(errorList[--numErrors]->value); // no close error from the errorList and return to normal
+					free(errorList[numErrors]); // execution of the lexer, ready to read in the next input.
 					errorList = realloc(errorList, numErrors * sizeof(error*));
 					state = nulsym;
-				} else if (tmpC == '\n') {
+				} else if (tmpC == '\n') { // Keeps track of number of lines in the code, even through comments.
 					numLines++;
 					almostEnding = 0;
 					state = comment;
-				} else {
+				} else { // Still a comment.
 					almostEnding = 0;
 					state = comment;
 				} 
@@ -157,6 +158,11 @@ int main(int argc, char *argv[]) {
 						numLines++;
 					case ' ':
 					case '\t':
+					case '\a':
+					case '\b':
+					case '\r':
+					case '\f':
+					case '\v':
 						state = nulsym;
 						break;
 
