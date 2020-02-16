@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 				if (tmpC == '*') {
 					almostEnding = 1;
 					state = comment;
-				} else if ((tcmpC == '/') && (almostEnding == 1)) {
+				} else if ((tmpC == '/') && (almostEnding == 1)) {
 					state = nulsym;
 				} else {
 					almostEnding = 0;
@@ -143,9 +143,6 @@ int main(int argc, char *argv[]) {
 						break;
 					case ':':
 						state = becomessym;
-						varLength++;
-						buffer = realloc(buffer, varLength * sizeof(char));
-						buffer[varLength - 1] = ':';
 						break;
 					case '\n':
 						numLines++;
@@ -239,7 +236,7 @@ int main(int argc, char *argv[]) {
             		state = comment;
             	} else {
             		addLexeme("/", slashsym);
-            		unget(tmpC, ipr);
+            		ungetc(tmpC, ipr);
             		ungot = 1;
             		state = nulsym;
             	}
@@ -252,7 +249,7 @@ int main(int argc, char *argv[]) {
 					addLexeme("<>", neqsym);
 				} else {
 					addLexeme("<", lessym);
-					unget(tmpC, ipr);
+					ungetc(tmpC, ipr);
 					ungot = 1;
 				}
 
@@ -264,7 +261,7 @@ int main(int argc, char *argv[]) {
 					addLexeme(">=", geqsym);
 				} else {
 					addLexeme(">", gtrsym);
-					unget(tmpC, ipr);
+					ungetc(tmpC, ipr);
 					ungot = 1;
 				}
 
@@ -276,13 +273,13 @@ int main(int argc, char *argv[]) {
 					addLexeme(":=", becomessym);
 				} else {
 					addError(":", invalidSymbolError, numLines);
-					unget(tmpC, ipr);
+					ungetc(tmpC, ipr);
 					ungot = 1;
 				}
 
 				state = nulsym;
 				break;
-
+			}
 		if (ungot == 0) {
 			fprintf(opr, "%c", tmpC);
 		}

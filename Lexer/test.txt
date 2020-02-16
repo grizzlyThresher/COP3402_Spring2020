@@ -1,5 +1,5 @@
-var x,y,a; abcdefghijklmnop
-begin % $ #
+var x,y,a;
+begin
 	y:= x +a;
 	x:= y + 56;
 end.
