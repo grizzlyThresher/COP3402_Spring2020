@@ -78,6 +78,7 @@ int main(int argc, char *argv[]) {
 
 	int ungot = 0;
 	int varLength = 0;
+	int almostEnding = 0;
 	numTokens = 0;
 	numLines = 1;
 	numErrors = 0;
@@ -90,6 +91,18 @@ int main(int argc, char *argv[]) {
 
 		ungot = 0;
 		switch (state) {
+			case comment :
+				if (tmpC == '*') {
+					almostEnding = 1;
+					state = comment;
+				} else if ((tcmpC == '/') && (almostEnding == 1)) {
+					state = nulsym;
+				} else {
+					almostEnding = 0;
+					state = comment;
+				}
+				break;
+
 			case nulsym : // Handles all transitions from the start state.
 				switch (tmpC) {
 					case '+':
@@ -103,24 +116,15 @@ int main(int argc, char *argv[]) {
 						break;
 					case '/':
 						state = slashsym;
-						varLength++;
-						buffer = realloc(buffer, varLength * sizeof(char));
-						buffer[varLength - 1] = '/';
 						break;
 					case '=':
 						addLexeme("=", eqsym);
 						break;
 					case '<':
 						state = lessym;
-						varLength++;
-						buffer = realloc(buffer, varLength * sizeof(char));
-						buffer[varLength - 1] = '<';
 						break;
 					case '>':
 						state = gtrsym;
-						varLength++;
-						buffer = realloc(buffer, varLength * sizeof(char));
-						buffer[varLength - 1] = '>';
 						break;
 					case '(':
 						addLexeme("(", lparentsym);
@@ -175,7 +179,6 @@ int main(int argc, char *argv[]) {
 				break;
 
 			case identsym : // Handles all transitions for potential identifiers and reserved words.
-
 				charAsString[0] = tmpC;
 				if ((regexec(&letter, charAsString, 0, NULL, 0) == 0) ||
 				 regexec(&digit, charAsString, 0, NULL, 0) == 0) {
@@ -227,15 +230,67 @@ int main(int argc, char *argv[]) {
 					buffer = realloc(buffer, varLength * sizeof(char));
 
 				}
+            break;
+
+            case slashsym :
+            	if (tmpC == '*')
+            	{
+       				almostEnding = 0;
+            		state = comment;
+            	} else {
+            		addLexeme("/", slashsym);
+            		unget(tmpC, ipr);
+            		ungot = 1;
+            		state = nulsym;
+            	}
+            	break;
+
+			case lessym : 
+				if (tmpC == '=') {
+					addLexeme("<=", leqsym);
+				} else if (tmpC == '>') {
+					addLexeme("<>", neqsym);
+				} else {
+					addLexeme("<", lessym);
+					unget(tmpC, ipr);
+					ungot = 1;
+				}
+
+				state = nulsym;
 				break;
 
-		}
+			case gtrsym : 
+				if (tmpC == '=') {
+					addLexeme(">=", geqsym);
+				} else {
+					addLexeme(">", gtrsym);
+					unget(tmpC, ipr);
+					ungot = 1;
+				}
+
+				state = nulsym;
+				break;
+
+			case becomessym :
+				if (tmpC == '=') {
+					addLexeme(":=", becomessym);
+				} else {
+					addError(":", invalidSymbolError, numLines);
+					unget(tmpC, ipr);
+					ungot = 1;
+				}
+
+				state = nulsym;
+				break;
 
 		if (ungot == 0) {
 			fprintf(opr, "%c", tmpC);
 		}
-
 	} while(1);
+
+	if (state == comment)
+		addError("", openCommentError, numLines);
+
 	fprintf(opr, "\n\n\n");
 	if (numErrors >= 1) {
 		for (int i = 0; i < numErrors; i++) {

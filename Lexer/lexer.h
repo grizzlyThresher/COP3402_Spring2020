@@ -4,7 +4,7 @@
 
 
 typedef enum token_type { 
-nulsym =1, identsym, numbersym, plussym, minussym,
+comment=0, nulsym=1, identsym, numbersym, plussym, minussym,
 multsym,  slashsym, oddsym, eqsym, neqsym, lessym, leqsym,
 gtrsym, geqsym, lparentsym, rparentsym, commasym, semicolonsym,
 periodsym, becomessym, beginsym, endsym, ifsym, thensym, 
