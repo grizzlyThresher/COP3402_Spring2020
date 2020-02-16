@@ -1,0 +1,9 @@
+var x,y,a; 
+begin 
+	y:= 1x3 +a;
+	x:= y + 566667;
+	iafjfglajdfgnlkajfgnfg:= 2;
+	?
+	/* OPENNNN COMMENT WOOOOOOOOOOOOOOOOOOO *
+
+end.

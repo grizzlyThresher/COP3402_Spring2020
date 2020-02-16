@@ -1,0 +1,17 @@
+Source Program:
+var x,y,a; 
+begin 
+	y:= 1x3 +a;
+	x:= y + 566667;
+	iafjfglajdfgnlkajfgnfg:= 2;
+	?
+	/* OPENNNN COMMENT WOOOOOOOOOOOOOOOOOOO *
+
+end.
+
+
+Error at (testErrors.txt:3): Identifier Begins With a Digit ("1x3").
+Error at (testErrors.txt:4): Number Longer Than 5 Digits (566667).
+Error at (testErrors.txt:5): Identifier Longer Than 11 Characters ("iafjfglajdfgnlkajfgnfg").
+Error at (testErrors.txt:6): Unidentified Symbol ('?').
+Error at (testErrors.txt:7): Open Comment Never Closed.
