@@ -77,6 +77,7 @@ int main(int argc, char *argv[]) {
 	fprintf(opr, "Source Program:\n");
 
 	int ungot = 0;
+	int badVar = 0;
 	int varLength = 0;
 	int almostEnding = 0;
 	numTokens = 0;
@@ -163,6 +164,7 @@ int main(int argc, char *argv[]) {
 						// Checks if it is a letter or a digit
 						// If neither, print remaining code, throws an error, and halts the program
 					default:
+						badVar = 0;
 						charAsString[0] = tmpC;
 						if (regexec(&letter, charAsString, 0, NULL, 0) == 0) {
 							state = identsym;
@@ -191,6 +193,11 @@ int main(int argc, char *argv[]) {
 					buffer = realloc(buffer, varLength * sizeof(char));
 					buffer[varLength - 1] = tmpC;
 				} else {
+					if (badVar = 1) {
+						addError(buffer, invalidIdentifierError, lineNum);
+					} if (varLength > 11) {
+						addError(buffer, varLengthError, lineNum);
+					}
 					ungetc(tmpC, ipr);
 					ungot = 1;
 					state = nulsym;
@@ -236,6 +243,31 @@ int main(int argc, char *argv[]) {
 
 				}
             break;
+
+            case numbersym :
+            	charAsString[0] = tmpC;
+            	if (regexec(&digit, charAsString, 0, NULL, 0) == 0) {
+            		varLength++;
+            		buffer = realloc(buffer, varLength * sizeof(char));
+            		buffer[varLength - 1] = tmpC;
+            		state = numbersym;
+            	} else if (regexec(&letter, charAsString, 0, NULL, 0) == 0) {
+            		varLength++;
+            		buffer = realloc(buffer, varLength * sizeof(char));
+            		buffer[verLength - 1] = tmpC;
+            		badVar = 1;
+            		state = identsym;
+            	} else {
+            		if (varLength > 5) {
+            			addError(buffer, numLengthError, lineNum);
+            		}
+            		ungetc(tmpC, ipr);
+            		unget = 1;
+            		varLength = 0;
+            		buffer = realloc(buffer, (varLength + 1) * sizeof(char));
+            		state = nulsym;
+            	}
+            	break;
 
             case slashsym :
             	if (tmpC == '*')
@@ -305,8 +337,11 @@ int main(int argc, char *argv[]) {
 				case varLengthError :
 				fprintf(opr, "Variable Longer Than %d Characters (\"%s\")\n", MAX_VAR_LENGTH, errorList[i]->value);
 				break;
+				case invalidIdentifierError :
+				fprintf(opr, "Identifier Begins With a Digit\n");
+				break;
 				case invalidSymbolError :
-				fprintf(opr, "Unidentified Symbol (\'%s\')\n",errorList[i]->value);
+				fprintf(opr, "Unidentified Symbol (\'%s\')\n", errorList[i]->value);
 				break;
 				case openCommentError :
 				fprintf(opr, "Open Comment Never Closed\n");
