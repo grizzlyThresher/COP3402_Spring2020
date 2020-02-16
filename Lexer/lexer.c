@@ -207,10 +207,13 @@ int main(int argc, char *argv[]) {
 					state = nulsym;
 					buffer = realloc(buffer, (varLength + 1) * sizeof(char)); // Tidies up the buffer to finish the string
 					buffer[varLength] = '\0';
-					if (varLength > MAX_VAR_LENGTH) { // Throws an error if the identifier is longer than the max specification
-						addError(buffer, varLengthError, numLines);
-					} else if (badVar == 1) { // Throws an error if the (invalid) identifier begins with a number
-						addError(buffer, invalidIdentifierError, numLines);
+					if ((varLength > MAX_VAR_LENGTH) || (badVar == 1)) { // Checks if there's an error with the identifier
+						if (varLength > MAX_VAR_LENGTH) { // Throws an error if the identifier is longer than the max specification
+							addError(buffer, varLengthError, numLines);
+						} else if (badVar == 1) { // Throws an error if the (invalid) identifier begins with a number
+							addError(buffer, invalidIdentifierError, numLines);
+						}
+					} else if (badVar == 1) { 
 					} else if (strcmp(buffer,  "odd") == 0) { // String read in is "odd", valid string
 						addLexeme(buffer, oddsym);
 					} else if (strcmp(buffer, "begin") == 0) { // String read in is "begin", valid string
