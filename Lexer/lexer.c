@@ -9,8 +9,13 @@
 #include <regex.h>
 #include "lexer.h"
 
+// numTokens used as length of our lexeme/token array
+// numErrors used as length of our error array
+// numLines used to keep track of line number for error handling purposes
 int numTokens, numErrors, numLines;
+// Our list of lexeme/token pairs
 lexeme **lexemes;
+// Our list of errors
 error **errorList;
 
 int main(int argc, char *argv[]) {
@@ -76,14 +81,17 @@ int main(int argc, char *argv[]) {
 
 	fprintf(opr, "Source Program:\n");
 
-	int ungot = 0;
-	int badVar = 0;
-	int varLength = 0;
-	int almostEnding = 0;
-	numTokens = 0;
-	numLines = 1;
-	numErrors = 0;
+	int ungot = 0; // Used to check if we've had to call ungetc() for that pass of the loop.
+	int badVar = 0; // Used to check if the potential identifier starts with a number
+	int varLength = 0; // Used to keep track of the length of our buffer
+	int almostEnding = 0; // Used while in a comment to know if we should exit when give a '/'
+	numTokens = 0; // Initially no tokens in lexeme/token array
+	numLines = 1; // Program always starts at line 1
+	numErrors = 0; // Initially no errors in error array
+
+	// Used to store potential identifiers and numbers
 	char *buffer = malloc(varLength * sizeof(char));
+
 	do {
 
 		tmpC = fgetc(ipr); // Sets tmpC equal to the next char from the input file
@@ -255,14 +263,16 @@ int main(int argc, char *argv[]) {
             		                  // considered to be an (invalid) identifier
             	} else { // Checks if the char is anything other than a digit or letter, indicating that the number
             		     // string has finished
-            		if (varLength > 5) { // Checks the length of the read in number string and throws an error if it's too long
-            			addError(buffer, numLengthError, numLines);
-            		}
+            		
             		ungetc(tmpC, ipr); // Re-checks the next character in the series by directing it back to nulsym
             		ungot = 1;
             		buffer = realloc(buffer, (varLength+1) * sizeof(char)); // Tidies up the buffer to finish up the string
             		buffer[varLength] = '\0';
-            		addLexeme(buffer, numbersym); // Adds the string from the buffer into the lexeme
+            		if (varLength > 5) { // Checks the length of the read in number string and throws an error if it's too long
+            			addError(buffer, numLengthError, numLines);
+            		} else {// Otehrwise adds the string from the buffer into the lexeme list
+            			addLexeme(buffer, numbersym); 
+            		}
             		varLength = 0; // Begins the process of reallocating and clearing the buffer
             		buffer = realloc(buffer, (varLength + 1) * sizeof(char));
             		state = nulsym;
@@ -383,16 +393,17 @@ int main(int argc, char *argv[]) {
 	free(buffer);
 	fclose(ipr);
 	free(charAsString);
+	// Only closes opr if it isn't set as stdout
 	if (strcmp("display",argv[1]) != 0)
 		fclose(opr);
 
 	return 0;
 }
 
-// Method used to add to Token and Lexeme Lists
+// Method used to add to Lexeme/Token List
 void addLexeme (char* lex, token_type token) {
-	// Increases number of tokens, increases the size of the tokens array and
-	// lexemes array, adds the new token and new lexeme
+	// Increases number of tokens, increases the size of lexeme/token array
+	// adds new lexeme/token pair to the list.
 	numTokens++;
 	lexemes = realloc(lexemes, numTokens * sizeof(lexeme*));
 	lexemes[numTokens-1] = malloc(sizeof(lexeme));
@@ -401,8 +412,8 @@ void addLexeme (char* lex, token_type token) {
 	strcpy(lexemes[numTokens-1]->value, lex);
 }
 
-// Method used to create a buffer that stores characters as a string as they're 
-// being read in
+// Method used to create a buffer to dynamically create space between
+// displayed elements based on size. Keeps displayed info more organized.
 void makeBuf(char buffer[], char* str, int bufLen) {
 	if (bufLen >= strlen(str)) {
 		for (int i = 0; i < (bufLen - strlen(str)); i++) {
