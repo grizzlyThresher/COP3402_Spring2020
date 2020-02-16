@@ -384,7 +384,19 @@ int main(int argc, char *argv[]) {
 		fprintf(opr, "\n");
 	}
 
+	for (int i = 0; i < numTokens; i++) {
+		free(lexemes[i]->value);
+		free(lexemes[i]);
+	}
+	free(lexemes);
+	for (int i = 0; i < numErrors; i++) {
+		free(errorList[i]->value);
+		free(errorList[i]);
+	}
+	free(errorList);
+	free(buffer);
 	fclose(ipr);
+	free(charAsString);
 	if (strcmp("display",argv[1]) != 0)
 		fclose(opr);
 
