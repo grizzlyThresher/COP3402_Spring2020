@@ -1,0 +1,27 @@
+var x,y,a; 
+begin 
+	/* Starting the program beep boop */
+	y:= x +a;
+	x:= y + 56;
+	x > 2;
+	x >= 2;
+	x < 3;
+	x <= 3;
+	x * 5;
+	x - 8;
+	x/x;
+	y = x;
+	x <> y;
+	(odd);
+	if x;
+	then y;
+	while 5;
+	do 3;
+	call x;
+	const hi;
+	procedure 2;
+	write 1;
+	read 3;
+	else 1;
+
+end.
