@@ -8,3 +8,4 @@
 ## Virtual Machine Information
 
 [Virtual Machine Readme](VirtualMachine/README.md)
+[Lexer Readme](Lexer/README.md)
