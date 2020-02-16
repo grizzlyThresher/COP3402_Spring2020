@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
 					if ((varLength > MAX_VAR_LENGTH) || (badVar == 1)) { // Checks if there's an error with the identifier
 						if (varLength > MAX_VAR_LENGTH) { // Throws an error if the identifier is longer than the max specification
 							addError(buffer, varLengthError, numLines);
-						} else if (badVar == 1) { // Throws an error if the (invalid) identifier begins with a number
+						} if (badVar == 1) { // Throws an error if the (invalid) identifier begins with a number
 							addError(buffer, invalidIdentifierError, numLines);
 						}
 					} else if (badVar == 1) { 
