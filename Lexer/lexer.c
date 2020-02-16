@@ -192,19 +192,23 @@ int main(int argc, char *argv[]) {
 					varLength++;
 					buffer = realloc(buffer, varLength * sizeof(char));
 					buffer[varLength - 1] = tmpC;
-				} else {
-					if (badVar = 1) {
-						addError(buffer, invalidIdentifierError, lineNum);
-					} if (varLength > 11) {
-						addError(buffer, varLengthError, lineNum);
+					if (varLength > MAX_VAR_LENGTH) {
+						badVar = 1;
 					}
+				} else {
 					ungetc(tmpC, ipr);
 					ungot = 1;
 					state = nulsym;
 					buffer = realloc(buffer, (varLength + 1) * sizeof(char));
 					buffer[varLength] = '\0';
-					if (varLength > MAX_VAR_LENGTH){
-						addError(buffer, varLengthError, numLines);
+					if (badVar == 1){
+						if (varLength > MAX_VAR_LENGTH) {
+							addError(buffer, varLengthError, numLines);
+						}
+						charAsString[0] = buffer[0];
+						if (regexec(&digit, charAsString, 0, NULL, 0) == 0) {
+							addError(buffer, invalidIdentifierError, numLines);
+						}
 					} else if (strcmp(buffer,  "odd") == 0) {
 						addLexeme(buffer, oddsym);
 					} else if (strcmp(buffer, "begin") == 0) {
@@ -254,15 +258,18 @@ int main(int argc, char *argv[]) {
             	} else if (regexec(&letter, charAsString, 0, NULL, 0) == 0) {
             		varLength++;
             		buffer = realloc(buffer, varLength * sizeof(char));
-            		buffer[verLength - 1] = tmpC;
+            		buffer[varLength - 1] = tmpC;
             		badVar = 1;
             		state = identsym;
             	} else {
             		if (varLength > 5) {
-            			addError(buffer, numLengthError, lineNum);
+            			addError(buffer, numLengthError, numLines);
             		}
             		ungetc(tmpC, ipr);
-            		unget = 1;
+            		ungot = 1;
+            		buffer = realloc(buffer, (varLength+1) * sizeof(char));
+            		buffer[varLength] = '\0';
+            		addLexeme(buffer, numbersym);
             		varLength = 0;
             		buffer = realloc(buffer, (varLength + 1) * sizeof(char));
             		state = nulsym;
@@ -332,19 +339,19 @@ int main(int argc, char *argv[]) {
 			fprintf(opr, "Error at (%s:%d): ",inFile, errorList[i]->lineNum);
 			switch (errorList[i]->type) {
 				case numLengthError :
-				fprintf(opr, "Number Longer Than %d Digits (%s)\n", MAX_NUM_LENGTH, errorList[i]->value);
+				fprintf(opr, "Number Longer Than %d Digits (%s).\n", MAX_NUM_LENGTH, errorList[i]->value);
 				break;
 				case varLengthError :
-				fprintf(opr, "Variable Longer Than %d Characters (\"%s\")\n", MAX_VAR_LENGTH, errorList[i]->value);
+				fprintf(opr, "Identifier Longer Than %d Characters (\"%s\").\n", MAX_VAR_LENGTH, errorList[i]->value);
 				break;
 				case invalidIdentifierError :
-				fprintf(opr, "Identifier Begins With a Digit\n");
+				fprintf(opr, "Identifier Begins With a Digit (\"%s\").\n", errorList[i]->value);
 				break;
 				case invalidSymbolError :
-				fprintf(opr, "Unidentified Symbol (\'%s\')\n", errorList[i]->value);
+				fprintf(opr, "Unidentified Symbol (\'%s\').\n", errorList[i]->value);
 				break;
 				case openCommentError :
-				fprintf(opr, "Open Comment Never Closed\n");
+				fprintf(opr, "Open Comment Never Closed.\n");
 				break;
 			}
 		}

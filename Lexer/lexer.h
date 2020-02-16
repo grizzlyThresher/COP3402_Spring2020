@@ -13,7 +13,7 @@ readsym , elsesym} token_type;
 
 typedef enum {
 	numLengthError = 1, varLengthError, invalidSymbolError,
-	openCommentError
+	invalidIdentifierError, openCommentError
 } error_type;
 
 typedef struct {
