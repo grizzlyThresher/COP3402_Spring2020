@@ -1,10 +1,12 @@
 Source Program:
-var x,y,a;
+var x,y,a; abcdefghijklmnop
 begin /*
 	y:= x +a;
 	x:= y + 56;
-	 %
+	*/ %/*
 end.
 
 
-Error at Line (2) : Open Comment Never Closed
+Error at (test.txt:1): Variable Longer Than 11 Characters ("abcdefghijklmnop")
+Error at (test.txt:5): Unidentified Symbol ('%')
+Error at (test.txt:5): Open Comment Never Closed

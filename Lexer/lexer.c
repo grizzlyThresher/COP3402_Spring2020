@@ -297,16 +297,16 @@ int main(int argc, char *argv[]) {
 	fprintf(opr, "\n\n\n");
 	if (numErrors >= 1) {
 		for (int i = 0; i < numErrors; i++) {
-			fprintf(opr, "Error at Line (%d) : ", errorList[i]->lineNum);
+			fprintf(opr, "Error at (%s:%d): ",inFile, errorList[i]->lineNum);
 			switch (errorList[i]->type) {
 				case numLengthError :
-				fprintf(opr, "Number Longer Than %d Digits - %s\n", MAX_NUM_LENGTH, errorList[i]->value);
+				fprintf(opr, "Number Longer Than %d Digits (%s)\n", MAX_NUM_LENGTH, errorList[i]->value);
 				break;
 				case varLengthError :
-				fprintf(opr, "Variable Longer Than %d Characters - \"%s\"\n", MAX_VAR_LENGTH, errorList[i]->value);
+				fprintf(opr, "Variable Longer Than %d Characters (\"%s\")\n", MAX_VAR_LENGTH, errorList[i]->value);
 				break;
 				case invalidSymbolError :
-				fprintf(opr, "Unidentified Symbol - \"%s\"\n",errorList[i]->value);
+				fprintf(opr, "Unidentified Symbol (\'%s\')\n",errorList[i]->value);
 				break;
 				case openCommentError :
 				fprintf(opr, "Open Comment Never Closed\n");

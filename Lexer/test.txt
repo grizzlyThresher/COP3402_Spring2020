@@ -1,6 +1,6 @@
-var x,y,a;
+var x,y,a; abcdefghijklmnop
 begin /*
 	y:= x +a;
 	x:= y + 56;
-	 %
+	*/ %/*
 end.
