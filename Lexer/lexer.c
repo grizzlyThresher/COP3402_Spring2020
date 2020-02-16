@@ -213,7 +213,6 @@ int main(int argc, char *argv[]) {
 						} if (badVar == 1) { // Throws an error if the (invalid) identifier begins with a number
 							addError(buffer, invalidIdentifierError, numLines);
 						}
-					} else if (badVar == 1) { 
 					} else if (strcmp(buffer,  "odd") == 0) { // String read in is "odd", valid string
 						addLexeme(buffer, oddsym);
 					} else if (strcmp(buffer, "begin") == 0) { // String read in is "begin", valid string
