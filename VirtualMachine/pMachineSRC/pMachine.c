@@ -61,8 +61,8 @@ int main(int argc, char *argv[]) {
 
     // List of all possible operations the Virtual Machines can perform
     char *operations[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio",
-    "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq", "lss",
-    "leq", "gtr", "geq"};
+    "sio", "sio", "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq",
+    "lss", "leq", "gtr", "geq"};
 
     fprintf(opr, "Line    Op    R   L    M \n");
 	if(readInstructions(&code, ipr, opr, operations, &numLines) == 1) {
@@ -158,62 +158,54 @@ int main(int argc, char *argv[]) {
                     pc = ir.m;
                 }
                 break;
-			case 9: // SIO
-				switch (ir.m) {
-                    case 1: // WRITE
-                    	printf("%d\n", registerFile[ir.r]);
-                        break;
-                    case 2: // READ
-	                    printf("Please input a value: ");
-	                    scanf("%d", &registerFile[ir.r]);
-                        fprintf(opr, "user input was: %d\n", registerFile[ir.r]);
-                        break;
-                    case 3: // halt = 1;
-                        halt = 1;
-                        break;
-                    default:
-                        BAD_OPERATION
-                        return 0;
-                    break;
-                }
+			case 9: // SIO WRITE
+                printf("%d\n", registerFile[ir.r]);
                 break;
-            case 10: // NEG
+            case 10: // SIO READ
+	            printf("Please input a value: ");
+	            scanf("%d", &registerFile[ir.r]);
+                fprintf(opr, "user input was: %d\n", registerFile[ir.r]);
+                break;
+            case 11: // SIO HALT
+                halt = 1;
+                break;
+            case 12: // NEG
             	registerFile[ir.r] = -1 * registerFile[ir.r];
                 break;
-            case 11: // ADD
+            case 13: // ADD
                 registerFile[ir.r] = registerFile[ir.l] + registerFile[ir.m];
                 break;
-            case 12: // SUB
+            case 14: // SUB
             	registerFile[ir.r] = registerFile[ir.l] - registerFile[ir.m];
                 break;
-            case 13: // MUL
+            case 15: // MUL
             	registerFile[ir.r] = registerFile[ir.l] * registerFile[ir.m];
                 break;	
-            case 14: // DIV
+            case 16: // DIV
             	registerFile[ir.r] = registerFile[ir.l] / registerFile[ir.m];
                 break;
-            case 15: // ODD
+            case 17: // ODD
             	registerFile[ir.r] = registerFile[ir.m] % 2;
                 break;
-            case 16: // MOD
+            case 18: // MOD
             	registerFile[ir.r] = registerFile[ir.l] % registerFile[ir.m];
                 break;
-            case 17: // EQL
+            case 19: // EQL
             	registerFile[ir.r] = (registerFile[ir.l] == registerFile[ir.m]);
                 break;
-            case 18: // NEQ
+            case 20: // NEQ
             	registerFile[ir.r] = (registerFile[ir.l] != registerFile[ir.m]);
                 break;
-            case 19: // LSS
+            case 21: // LSS
             	registerFile[ir.r] = (registerFile[ir.l] < registerFile[ir.m]);
                 break;
-            case 20: // LEQ
+            case 22: // LEQ
                 registerFile[ir.r] = (registerFile[ir.l] <= registerFile[ir.m]);           
                 break;
-            case 21: // GTR
+            case 23: // GTR
             	registerFile[ir.r] = (registerFile[ir.l] > registerFile[ir.m]);
                 break;
-            case 22: // GEQ
+            case 24: // GEQ
             	registerFile[ir.r] = (registerFile[ir.l] >= registerFile[ir.m]);
                 break;
             default:

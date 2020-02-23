@@ -64,32 +64,32 @@ NOTE: The result of a logical operation such as A < B is 1 if the case is met
 
 09. SIO R, 0, 1   print reg[R]
 
-09. SIO R, 0, 2   read input to reg[R]
+10. SIO R, 0, 2   read input to reg[R]
 
-09. SIO R, 0, 3   set halt flag to one (end of program)
+11. SIO R, 0, 3   set halt flag to one (end of program)
 
-10. NEG           reg[R] <- -reg[R]
+12. NEG           reg[R] <- -reg[R]
 
-11. ADD           reg[R] <- reg[L] + reg[M]
+13. ADD           reg[R] <- reg[L] + reg[M]
 
-12. SUB           reg[R] <- reg[L] - reg[M]
+14. SUB           reg[R] <- reg[L] - reg[M]
 
-13. MUL           reg[R] <- reg[L] * reg[M]
+15. MUL           reg[R] <- reg[L] * reg[M]
 
-14. DIV           reg[R] <- reg[L] * reg[M]
+16. DIV           reg[R] <- reg[L] * reg[M]
 
-15. ODD           reg[R] <- reg[R] % 2
+17. ODD           reg[R] <- reg[R] % 2
 
-16. MOD           reg[R] <- reg[L] % reg[M]
+18. MOD           reg[R] <- reg[L] % reg[M]
 
-17. EQL           reg[R] <- reg[L] == reg[M]
+19. EQL           reg[R] <- reg[L] == reg[M]
 
-18. NEQ           reg[R] <- reg[L] != reg[M]
+20. NEQ           reg[R] <- reg[L] != reg[M]
 
-19. LSS           reg[R] <- reg[L] < reg[M]
+21. LSS           reg[R] <- reg[L] < reg[M]
 
-20. LEQ           reg[R] <- reg[L] <= reg[M]
+22. LEQ           reg[R] <- reg[L] <= reg[M]
 
-21. GTR           reg[R] <- reg[L] > reg[M]
+23. GTR           reg[R] <- reg[L] > reg[M]
 
-22. GEQ           reg[R] <- reg[L] >= reg[M]
+24. GEQ           reg[R] <- reg[L] >= reg[M]
