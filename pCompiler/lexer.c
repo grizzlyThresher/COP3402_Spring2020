@@ -192,20 +192,14 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 						addLexeme(&lexemes,buffer, whilesym);
 					} else if (strcmp(buffer, "do") == 0) { // String read in is "do", valid string
 						addLexeme(&lexemes,buffer, dosym);
-					} else if (strcmp(buffer, "call") == 0) { // String read in is "call", valid string
-						addLexeme(&lexemes,buffer, callsym);
 					} else if (strcmp(buffer, "const") == 0) { // String read in is "const", valid string
 						addLexeme(&lexemes,buffer, constsym);
 					} else if (strcmp(buffer, "var") == 0) { // String read in is "var", valid string
 						addLexeme(&lexemes,buffer, varsym);
-					} else if (strcmp(buffer, "procedure") == 0) { // String read in is "procedure", valid string
-						addLexeme(&lexemes,buffer, procsym);
 					} else if (strcmp(buffer, "write") == 0) { // String read in is "write", valid string
 						addLexeme(&lexemes,buffer, writesym);
 					} else if (strcmp(buffer, "read") == 0) { // String read in is "read", valid string
 						addLexeme(&lexemes,buffer, readsym);
-					} else if (strcmp(buffer, "else") == 0) { // String read in is "else", valid string
-						addLexeme(&lexemes,buffer, elsesym);
 					} else { // String read in is a new valid variable
 						addLexeme(&lexemes,buffer, identsym);
 					}
