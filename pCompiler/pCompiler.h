@@ -12,7 +12,7 @@
 typedef enum op_code {
 	LIT = 1, RET, LOD, STO, CAL, INC, JMP, JPC, SIO, NEG, ADD,
 	SUB, MUL, DIV, ODD, MOD, EQL, NEQ, LSS, LEQ, GTR, GEQ
-}op_code;
+} op_code;
 
 // struct used to organize instructions
 typedef struct{
@@ -20,7 +20,7 @@ typedef struct{
     int r;
     int l;
     int m;
-}instruction;
+} instruction;
 
 // Constants used in the Virtual Machine
 #define MAX_DATASTACK_HEIGHT  40
@@ -54,17 +54,22 @@ int execute(instruction* code, FILE* opr);
 
 // enum used to keep track of the various token types in the lexer
 typedef enum token_type { 
-comment=0, nulsym=1, identsym, numbersym, plussym, minussym,
-multsym,  slashsym, oddsym, eqsym, neqsym, lessym, leqsym,
-gtrsym, geqsym, lparentsym, rparentsym, commasym, semicolonsym,
-periodsym, becomessym, beginsym, endsym, ifsym, thensym, 
-whilesym, dosym, callsym, constsym, varsym, procsym, writesym,
-readsym , elsesym} token_type;
+	comment=0, nulsym=1, identsym, numbersym, plussym, minussym,
+	multsym,  slashsym, oddsym, eqsym, neqsym, lessym, leqsym,
+	gtrsym, geqsym, lparentsym, rparentsym, commasym, semicolonsym,
+	periodsym, becomessym, beginsym, endsym, ifsym, thensym, 
+	whilesym, dosym, callsym, constsym, varsym, procsym, writesym,
+	readsym , elsesym
+} token_type;
 
 // enum used to keep track of the type of error encountered
 typedef enum {
 	numLengthError = 1, varLengthError, invalidSymbolError,
-	invalidIdentifierError, openCommentError
+	invalidIdentifierError, openCommentError, missingPeriodError,
+	identifierAlreadyConstError, varAlreadyExistsError,
+	identifierDoesntExistError, identifierExpectedError,
+	semicolonExpectedError, eqlExpectedError, numberExpectedError,
+	constAlreadyExists
 } error_type;
 
 // struct used to store errors to be printed at a later time
@@ -78,10 +83,11 @@ typedef struct {
 typedef struct {
 	char* value;
 	token_type token;
+	int lineNum;
 } lexeme;
 
 // Method used to add to Token and Lexeme Lists
-void addLexeme(lexeme*** lexemes, char* lex, token_type token);
+void addLexeme(lexeme*** lexemes, char* lex, token_type token, int lineNum);
 // Method used to deal with spacing when printing the Lexeme Table
 void makeBuf(char buffer[], char* str, int bufLen);
 // Method used to keep track of Lexical Errors
@@ -105,7 +111,7 @@ typedef struct{
 	int level;	// lexicographical level of symbol
 	int address;// memory address of symbol
 	int mark;	// keeps track of lifetime of symbol. 0 if in use, 1 if no longer in use.
-}symbol;
+} symbol;
 
 // Method to handle parsing and code generation
 instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int printParse, int* numInstructions);
@@ -141,7 +147,7 @@ int letter(instruction** code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
 
 // Method used to add symbols to the symbol table.
-int addSymbol(symbol*** symbolTabe, int* numSymbols, int kind, char* name, int val, int level, int address);
+int addSymbol(symbol*** symbolTabe, int* numSymbols, int kind, char* name, char* val, int level, int address);
 
 // Method used for symbol lookup.
 symbol* findSymbol(symbol** symbolTabe, char* name, int numSymbols);
@@ -151,3 +157,9 @@ int deleteSymbol(symbol** symbolTabe, char* name, int numSymbols);
 
 // Method used for adding instructions during code generation
 int addInstruction(instruction** code, op_code op, int r, int l, int m, int* numInstructions);
+
+// Method used to handle conversion from string to number
+int convertToInt(char* num);
+
+// Method used to find power of 10 for conversion from string to number
+int power10(int place);

@@ -88,19 +88,19 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 			case nulsym : // Handles all transitions from the start state
 				switch (tmpC) {
 					case '+': // Character read in is a '+'
-						addLexeme(&lexemes,"+", plussym);
+						addLexeme(&lexemes,"+", plussym, numLines);
 						break;
 					case '-': // Character read in is a '-'
-						addLexeme(&lexemes,"-", minussym);
+						addLexeme(&lexemes,"-", minussym, numLines);
 						break;
 					case '*': // Character read in is a '*'
-						addLexeme(&lexemes,"*", multsym);
+						addLexeme(&lexemes,"*", multsym, numLines);
 						break;
 					case '/': // Character read in is a '/'
 						state = slashsym;
 						break;
 					case '=': // Character read in is a '='
-						addLexeme(&lexemes,"=", eqsym);
+						addLexeme(&lexemes,"=", eqsym, numLines);
 						break;
 					case '<': // Character read in is a '<'
 						state = lessym; // Can lead to multi-char operator, move to new state
@@ -109,19 +109,19 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 						state = gtrsym; // Can lead to multi-char operator, move to new state
 						break;
 					case '(': // Character read in is a '('
-						addLexeme(&lexemes,"(", lparentsym);
+						addLexeme(&lexemes,"(", lparentsym, numLines);
 						break;
 					case ')': // Character read in is a ')'
-						addLexeme(&lexemes,")", rparentsym);
+						addLexeme(&lexemes,")", rparentsym, numLines);
 						break;
 					case ',': // Character read in is a ','
-						addLexeme(&lexemes,",", commasym);
+						addLexeme(&lexemes,",", commasym, numLines);
 						break;
 					case ';': // Character read in is a ';'
-						addLexeme(&lexemes,";", semicolonsym);
+						addLexeme(&lexemes,";", semicolonsym, numLines);
 						break;
 					case '.': // Character read in is a '.'
-						addLexeme(&lexemes,".", periodsym);
+						addLexeme(&lexemes,".", periodsym, numLines);
 						break;
 					case ':': // Character read in is a ':'
 						state = becomessym; // Can lead to multi-char operator, move to new state
@@ -179,29 +179,29 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 							addError(buffer, invalidIdentifierError, numLines);
 						}
 					} else if (strcmp(buffer,  "odd") == 0) { // String read in is "odd", valid string
-						addLexeme(&lexemes,buffer, oddsym);
+						addLexeme(&lexemes,buffer, oddsym, numLines);
 					} else if (strcmp(buffer, "begin") == 0) { // String read in is "begin", valid string
-						addLexeme(&lexemes,buffer, beginsym);
+						addLexeme(&lexemes,buffer, beginsym, numLines);
 					} else if (strcmp(buffer, "end") == 0) { // String read in is "end", valid string
-						addLexeme(&lexemes,buffer, endsym);
+						addLexeme(&lexemes,buffer, endsym, numLines);
 					} else if (strcmp(buffer, "if") == 0) { // String read in is "if", valid string
-						addLexeme(&lexemes,buffer, ifsym);
+						addLexeme(&lexemes,buffer, ifsym, numLines);
 					} else if (strcmp(buffer, "then") == 0) { // String read in is "then", valid string
-						addLexeme(&lexemes,buffer, thensym);
+						addLexeme(&lexemes,buffer, thensym, numLines);
 					} else if (strcmp(buffer, "while") == 0) { // String read in is "while", valid string
-						addLexeme(&lexemes,buffer, whilesym);
+						addLexeme(&lexemes,buffer, whilesym, numLines);
 					} else if (strcmp(buffer, "do") == 0) { // String read in is "do", valid string
-						addLexeme(&lexemes,buffer, dosym);
+						addLexeme(&lexemes,buffer, dosym, numLines);
 					} else if (strcmp(buffer, "const") == 0) { // String read in is "const", valid string
-						addLexeme(&lexemes,buffer, constsym);
+						addLexeme(&lexemes,buffer, constsym, numLines);
 					} else if (strcmp(buffer, "var") == 0) { // String read in is "var", valid string
-						addLexeme(&lexemes,buffer, varsym);
+						addLexeme(&lexemes,buffer, varsym, numLines);
 					} else if (strcmp(buffer, "write") == 0) { // String read in is "write", valid string
-						addLexeme(&lexemes,buffer, writesym);
+						addLexeme(&lexemes,buffer, writesym, numLines);
 					} else if (strcmp(buffer, "read") == 0) { // String read in is "read", valid string
-						addLexeme(&lexemes,buffer, readsym);
+						addLexeme(&lexemes,buffer, readsym, numLines);
 					} else { // String read in is a new valid variable
-						addLexeme(&lexemes,buffer, identsym);
+						addLexeme(&lexemes,buffer, identsym, numLines);
 					}
 					varLength = 0; // Resets buffer back to empty in preparation for next pass through the lexer
 					buffer = realloc(buffer, varLength * sizeof(char));
@@ -232,7 +232,7 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
             		if (varLength > 5) { // Checks the length of the read in number string and throws an error if it's too long
             			addError(buffer, numLengthError, numLines);
             		} else {// Otehrwise adds the string from the buffer into the lexeme list
-            			addLexeme(&lexemes,buffer, numbersym); 
+            			addLexeme(&lexemes,buffer, numbersym, numLines); 
             		}
             		varLength = 0; // Begins the process of reallocating and clearing the buffer
             		buffer = realloc(buffer, (varLength + 1) * sizeof(char));
@@ -246,7 +246,7 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
        				almostEnding = 0;
             		state = comment; // Begin comment parsing
             	} else { // Previous char read in is '/', re-check current char
-            		addLexeme(&lexemes,"/", slashsym);
+            		addLexeme(&lexemes,"/", slashsym, numLines);
             		ungetc(tmpC, ipr);
             		ungot = 1;
             		state = nulsym;
@@ -255,11 +255,11 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 
 			case lessym : // Checks the next char after '<' is read in
 				if (tmpC == '=') { // String read in is "<="
-					addLexeme(&lexemes,"<=", leqsym);
+					addLexeme(&lexemes,"<=", leqsym, numLines);
 				} else if (tmpC == '>') { // String read in is "<>"
-					addLexeme(&lexemes,"<>", neqsym);
+					addLexeme(&lexemes,"<>", neqsym, numLines);
 				} else { // Previous char read in is '<', re-check current char
-					addLexeme(&lexemes,"<", lessym);
+					addLexeme(&lexemes,"<", lessym, numLines);
 					ungetc(tmpC, ipr);
 					ungot = 1;
 				}
@@ -268,9 +268,9 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 
 			case gtrsym : // Checks the next char after '>' is read in
 				if (tmpC == '=') { // String read in is ">="
-					addLexeme(&lexemes,">=", geqsym);
+					addLexeme(&lexemes,">=", geqsym, numLines);
 				} else { // Previous char read in is '>', re-check current char
-					addLexeme(&lexemes,">", gtrsym);
+					addLexeme(&lexemes,">", gtrsym, numLines);
 					ungetc(tmpC, ipr);
 					ungot = 1;
 				}
@@ -279,7 +279,7 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 
 			case becomessym : // Checks the next char after ':' is read in
 				if (tmpC == '=') { // String read in is ":="
-					addLexeme(&lexemes,":=", becomessym);
+					addLexeme(&lexemes,":=", becomessym, numLines);
 				} else { // Previous char read in is invalid, throw error and re-check current char
 					addError(":", invalidSymbolError, numLines);
 					ungetc(tmpC, ipr);
@@ -300,7 +300,7 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 
 	if (numErrors >= 1) { // If any errors were encountered in the input file, prints error and all associated info
 		for (int i = 0; i < numErrors; i++) {
-			printf("****Lexing Error Number 00%d at Line (%d): ",errorList[i]->type, errorList[i]->lineNum);
+			printf("****Lexing Error 00%d at Line (%d): ",errorList[i]->type, errorList[i]->lineNum);
 			switch (errorList[i]->type) {
 				case numLengthError : // Number length exceeds maximum allowed length
 				printf("Number Longer Than %d Digits (%s).\n", MAX_NUM_LENGTH, errorList[i]->value);
@@ -374,7 +374,7 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 }
 
 // Method used to add to Lexeme/Token List
-void addLexeme (lexeme*** lexemes, char* lex, token_type token) {
+void addLexeme (lexeme*** lexemes, char* lex, token_type token, int lineNum) {
 	// Increases number of tokens, increases the size of lexeme/token array
 	// adds new lexeme/token pair to the list.
 	numTokens++;
@@ -383,6 +383,7 @@ void addLexeme (lexeme*** lexemes, char* lex, token_type token) {
 	lexemes[0][numTokens-1]->token = token;
 	lexemes[0][numTokens-1]->value = malloc((strlen(lex)) * sizeof(char));
 	strcpy(lexemes[0][numTokens-1]->value, lex);
+	lexemes[0][numTokens-1]->lineNum = lineNum;
 }
 
 // Method used to create a buffer to dynamically create space between
