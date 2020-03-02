@@ -3,12 +3,8 @@
 // COP 3402, Spring 2020
 // Project 3
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lexer.h"
-#include "pMachine.h"
-#include "parser.h"
 #include "pCompiler.h"
 
 int main(int argc, char* argv[]) {
@@ -40,8 +36,20 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "Could not find valid file by name: %s \n", inFile);
 		return 0;
 	}
+
 	int numTokens = 0;
 	lexeme** tokens = lex(ipr, opr, printLex, &numTokens);
+	if (tokens == NULL) {
+		fprintf(stderr, "Error in Lexicographical Analyzer. Program Failed to Compile\n");
+		return 0;
+	}
+
+	int numInstructions = 0;
+	instruction* code = parse(tokens, numTokens, opr, printParse, &numInstructions);
+	if (code == NULL) {
+		fprintf(stderr, "Error in Parser. Program Failed to Compile\n");
+		return 0;
+	}
 	
 	return 1;
 }

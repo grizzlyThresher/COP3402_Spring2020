@@ -3,11 +3,11 @@
 // COP 3402, Spring 2020
 // Project 2
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
-#include "lexer.h"
+#include "pCompiler.h"
+
 
 // numTokens used as length of our lexeme/token array
 // numErrors used as length of our error array

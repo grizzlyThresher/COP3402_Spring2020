@@ -3,19 +3,18 @@
 // COP 3402, Spring 2020
 // Project 1
 
-#include "pMachine.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "pCompiler.h"
 
 
-int execute(struct instruction* code, FILE* opr) {   
+int execute(instruction* code, FILE* opr) {   
 
     // Instantiation of Global variables
     int sp = 0;
     int bp = 1;
     int pc = 0;
-    struct instruction ir;
+    instruction ir;
     int* stack = calloc(MAX_DATASTACK_HEIGHT, sizeof(int));
     int* registerFile = calloc(NUM_REGISTERS, sizeof(int));
     int halt = 0;
@@ -26,7 +25,7 @@ int execute(struct instruction* code, FILE* opr) {
 
     // List of all possible operations the Virtual Machines can perform
     char *operations[] = {"lit","ret","lod","sto","cal","inc","jmp","jpc","sio",
-    "sio", "sio", "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq",
+    "neg", "add", "sub", "mul", "div", "odd", "mod", "eql", "neq",
     "lss", "leq", "gtr", "geq"};
 
 	fprintf(opr, "\n\n                          pc    bp    sp    registers\n");
@@ -48,10 +47,10 @@ int execute(struct instruction* code, FILE* opr) {
 		// Execute
         // sysOp is repeated intentionally to comply with specs given in the HW file.
 		switch (ir.op) {
-			case 1: // LIT
+			case LIT: // LIT
                 registerFile[ir.r] = ir.m;
                 break;
-			case 2: // RET
+			case RET: // RET
 				if (bp != 1) {
                     sp = bp - 1;
                     bp = stack[sp + 3];
@@ -59,7 +58,7 @@ int execute(struct instruction* code, FILE* opr) {
                     curLex--;
                 }
                 break;
-			case 3: // LOD
+			case LOD: // LOD
                 if (base(stack, ir.l, bp) + ir.m >= MAX_DATASTACK_HEIGHT) {
                     OUT_OF_BOUNDS
                     halt = 1;
@@ -72,7 +71,7 @@ int execute(struct instruction* code, FILE* opr) {
                     halt = 1;
                 }
                 break;
-			case 4: // STO
+			case STO: // STO
                 if (base(stack, ir.l, bp) + ir.m >= MAX_DATASTACK_HEIGHT) {
                     STACK_OVERFLOW
                     halt = 1;
@@ -85,7 +84,7 @@ int execute(struct instruction* code, FILE* opr) {
                     halt = 1;
                 }
                 break;
-			case 5: // CAL
+			case CAL: // CAL
 				if (sp + 4 >= MAX_DATASTACK_HEIGHT) {
                     STACK_OVERFLOW
                     halt = 1;
@@ -100,7 +99,7 @@ int execute(struct instruction* code, FILE* opr) {
                     curLex++;
                 }
                 break;
-			case 6: // INC
+			case INC: // INC
 				if (sp + ir.m >= MAX_DATASTACK_HEIGHT) {
                     STACK_OVERFLOW
                     halt = 1;
@@ -108,62 +107,66 @@ int execute(struct instruction* code, FILE* opr) {
                     sp += ir.m;
                 }
                 break;
-			case 7: // JMP
+			case JMP: // JMP
                 pc = ir.m;
                 break;
-			case 8: // JPC
+			case JPC: // JPC
                 if(registerFile[ir.r] == 0) {
                     pc = ir.m;
                 }
                 break;
-			case 9: // SIO WRITE
-                printf("%d\n", registerFile[ir.r]);
+			case SIO: 
+                switch (ir.m) {
+                    case 1: // SIO WRITE
+                        printf("%d\n", registerFile[ir.r]);
+                        break;
+                    case 2: // SIO READ
+	                    printf("Please input a value: ");
+	                    scanf("%d", &registerFile[ir.r]);
+                        fprintf(opr, "user input was: %d\n", registerFile[ir.r]);
+                        break;
+                    case 3: // SIO HALT
+                        halt = 1;
+                        break;
+                }
                 break;
-            case 10: // SIO READ
-	            printf("Please input a value: ");
-	            scanf("%d", &registerFile[ir.r]);
-                fprintf(opr, "user input was: %d\n", registerFile[ir.r]);
-                break;
-            case 11: // SIO HALT
-                halt = 1;
-                break;
-            case 12: // NEG
+            case NEG: // NEG
             	registerFile[ir.r] = -1 * registerFile[ir.r];
                 break;
-            case 13: // ADD
+            case ADD: // ADD
                 registerFile[ir.r] = registerFile[ir.l] + registerFile[ir.m];
                 break;
-            case 14: // SUB
+            case SUB: // SUB
             	registerFile[ir.r] = registerFile[ir.l] - registerFile[ir.m];
                 break;
-            case 15: // MUL
+            case MUL: // MUL
             	registerFile[ir.r] = registerFile[ir.l] * registerFile[ir.m];
                 break;	
-            case 16: // DIV
+            case DIV: // DIV
             	registerFile[ir.r] = registerFile[ir.l] / registerFile[ir.m];
                 break;
-            case 17: // ODD
+            case ODD: // ODD
             	registerFile[ir.r] = registerFile[ir.m] % 2;
                 break;
-            case 18: // MOD
+            case MOD: // MOD
             	registerFile[ir.r] = registerFile[ir.l] % registerFile[ir.m];
                 break;
-            case 19: // EQL
+            case EQL: // EQL
             	registerFile[ir.r] = (registerFile[ir.l] == registerFile[ir.m]);
                 break;
-            case 20: // NEQ
+            case NEQ: // NEQ
             	registerFile[ir.r] = (registerFile[ir.l] != registerFile[ir.m]);
                 break;
-            case 21: // LSS
+            case LSS: // LSS
             	registerFile[ir.r] = (registerFile[ir.l] < registerFile[ir.m]);
                 break;
-            case 22: // LEQ
+            case LEQ: // LEQ
                 registerFile[ir.r] = (registerFile[ir.l] <= registerFile[ir.m]);           
                 break;
-            case 23: // GTR
+            case GTR: // GTR
             	registerFile[ir.r] = (registerFile[ir.l] > registerFile[ir.m]);
                 break;
-            case 24: // GEQ
+            case GEQ: // GEQ
             	registerFile[ir.r] = (registerFile[ir.l] >= registerFile[ir.m]);
                 break;
             default:
@@ -183,7 +186,7 @@ int execute(struct instruction* code, FILE* opr) {
 }
 
 // Method used to print current state of the machine
-void printState(int* stack, int curLoc, struct instruction ir, int pc, int bp, int sp, int* regFile, int lex, FILE* output, char** oper) {
+void printState(int* stack, int curLoc, instruction ir, int pc, int bp, int sp, int* regFile, int lex, FILE* output, char** oper) {
 
 //    fprintf(opr, "                          pc    bp    sp    registers\n");
     char *buffer = calloc(11, sizeof(char));
