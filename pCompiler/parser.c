@@ -149,6 +149,79 @@ int vardeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
 
+ 	switch (tokens[*curToken]->token) {
+ 		case identsym: 
+ 			break;
+ 		case beginsym:
+ 			*curToken = *curToken + 1;
+ 			do {
+
+ 				if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 					return 1;
+ 				}
+ 				*curToken = *curToken + 1;
+ 			} while (tokens[*curToken]->token == semicolonsym);
+
+ 			if (tokens[*curToken]->token != endsym) {
+ 				fprintf(stderr, "Parsing Error 0%d at Line (%d): \"end\" Expected\n",
+			 endExpectedError, tokens[*curToken]->lineNum);
+ 				return 1;
+ 			}
+
+ 			break;
+ 		case ifsym:
+ 			*curToken = *curToken + 1;
+ 			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 				return 1;
+ 			}
+ 			if (tokens[*curToken]->token != thensym) {
+ 				fprintf(stderr, "Parsing Error 0%d at Line (%d): \"then\" Expected\n",
+			 thenExpectedError, tokens[*curToken]->lineNum);
+ 				return 1;
+ 			}
+ 			*curToken = *curToken + 1;
+ 			int tmpInstruction = *numInstructions;
+ 			addInstruction(code, JPC, 0, 0, 0, numInstructions);
+
+ 			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 					return 1;
+ 			}
+
+ 			code[0][tmpInstruction].m = (*numInstructions);
+ 			break;
+ 		case whilesym:
+ 			*curToken = *curToken + 1;
+ 			int jmpInstruction = *numInstructions;
+ 			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 				return 1;
+ 			}
+ 			if (tokens[*curToken]->token != dosym) {
+ 				fprintf(stderr, "Parsing Error 0%d at Line (%d): \"do\" Expected\n",
+			 doExpectedError, tokens[*curToken]->lineNum);
+ 				return 1;
+ 			}
+ 			*curToken = *curToken + 1;
+ 			int tmpInstruction = *numInstructions;
+ 			addInstruction(code, JPC, 0, 0, 0, numInstructions);
+
+ 			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 					return 1;
+ 			}
+
+ 			addInstruction(code, JMP, 0, 0, jmpInstruction, numInstructions);
+ 			code[0][tmpInstruction].m = (*numInstruction);
+ 			break;
+ 		case readsym:
+ 			*curToken = *curToken + 1;
+ 			break;
+ 		case writesym:
+ 			*curToken = *curToken + 1;
+ 			break;
+ 		default:
+ 			return 0;
+ 			break;
+ 	}
+
 	return 0;
 }
 int condition(instruction** code, symbol*** symbolTable, int* numSymbols,
