@@ -149,6 +149,8 @@ int vardeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
 
+	int tmpInstruction, jmpInstruction;
+
  	switch (tokens[*curToken]->token) {
  		case identsym: 
  			break;
@@ -180,7 +182,7 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
  			*curToken = *curToken + 1;
- 			int tmpInstruction = *numInstructions;
+ 			tmpInstruction = *numInstructions;
  			addInstruction(code, JPC, 0, 0, 0, numInstructions);
 
  			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
@@ -191,7 +193,7 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  			break;
  		case whilesym:
  			*curToken = *curToken + 1;
- 			int jmpInstruction = *numInstructions;
+ 			jmpInstruction = *numInstructions;
  			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
  				return 1;
  			}
@@ -201,7 +203,7 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
  			*curToken = *curToken + 1;
- 			int tmpInstruction = *numInstructions;
+ 			tmpInstruction = *numInstructions;
  			addInstruction(code, JPC, 0, 0, 0, numInstructions);
 
  			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
@@ -209,7 +211,7 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  			}
 
  			addInstruction(code, JMP, 0, 0, jmpInstruction, numInstructions);
- 			code[0][tmpInstruction].m = (*numInstruction);
+ 			code[0][tmpInstruction].m = (*numInstructions);
  			break;
  		case readsym:
  			*curToken = *curToken + 1;
