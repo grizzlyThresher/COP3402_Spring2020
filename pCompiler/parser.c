@@ -150,9 +150,35 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
 
 	int tmpInstruction, jmpInstruction;
+	symbol *curSym;
 
  	switch (tokens[*curToken]->token) {
- 		case identsym: 
+ 		case identsym:
+
+ 			curSym = findSymbol(*symbolTable, tokens[*curToken]->value, *numSymbols);
+ 			if (curSym == NULL) {
+ 				return 1;
+ 			} else if (curSym->kind == 1) {
+ 				fprintf(stderr, "Parsing Error 0%d at Line (%d): Cannot Reassign Value to Constant %s.\n",
+			 constReassignError, tokens[*curToken]->lineNum, curSym->name);
+ 				return 1;
+ 			}
+
+ 			*curToken = *curToken + 1;
+ 			if (tokens[*curToken]->token != becomessym) {
+ 				fprintf(stderr, "Parsing Error 0%d at Line (%d): \":=\" Expected\n",
+			 becomesExpectedError, tokens[*curToken]->lineNum);
+ 				return 1;
+ 			}
+
+ 			*curToken = *curToken + 1;
+ 			if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 				return 1;
+ 			}
+
+ 			// Makes sure last operation in expression ends up in Register 0
+ 			code[0][(*numInstructions) - 1].r = 0;
+ 			addInstruction(code, STO, 0, 0, curSym->address, numInstructions);
  			break;
  		case beginsym:
  			*curToken = *curToken + 1;
@@ -170,7 +196,9 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
 
+ 			*curToken = *curToken + 1;
  			break;
+
  		case ifsym:
  			*curToken = *curToken + 1;
  			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
@@ -186,11 +214,12 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  			addInstruction(code, JPC, 0, 0, 0, numInstructions);
 
  			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
- 					return 1;
+ 				return 1;
  			}
 
  			code[0][tmpInstruction].m = (*numInstructions);
  			break;
+
  		case whilesym:
  			*curToken = *curToken + 1;
  			jmpInstruction = *numInstructions;
@@ -202,23 +231,48 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
 			 doExpectedError, tokens[*curToken]->lineNum);
  				return 1;
  			}
+
  			*curToken = *curToken + 1;
  			tmpInstruction = *numInstructions;
  			addInstruction(code, JPC, 0, 0, 0, numInstructions);
 
  			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
- 					return 1;
+ 				return 1;
  			}
 
  			addInstruction(code, JMP, 0, 0, jmpInstruction, numInstructions);
  			code[0][tmpInstruction].m = (*numInstructions);
  			break;
+
  		case readsym:
+
+ 			*curToken = *curToken + 1;
+ 			curSym = findSymbol(*symbolTable, tokens[*curToken]->value, *numSymbols);
+ 			if (curSym == NULL) {
+ 				return 1;
+ 			} else if (curSym->kind == 1) {
+ 				fprintf(stderr, "Parsing Error 0%d at Line (%d): Cannot Reassign Value to Constant %s.\n",
+			 constReassignError, tokens[*curToken]->lineNum, curSym->name);
+ 				return 1;
+ 			}
+ 			addInstruction(code, SIO, 0, 0, 2, numInstructions);
+ 			addInstruction(code, STO, 0, 0, curSym->address, numInstructions);
  			*curToken = *curToken + 1;
  			break;
+
  		case writesym:
+
  			*curToken = *curToken + 1;
+ 			curSym = findSymbol(*symbolTable, tokens[*curToken]->value, *numSymbols);
+ 			if (curSym == NULL) {
+ 				return 1;
+ 			}
+ 			addInstruction(code, LOD, 0, 0, curSym->address, numInstructions);
+ 			addInstruction(code, SIO, 0, 0, 1, numInstructions);
+ 			*curToken = *curToken + 1;
+
  			break;
+
  		default:
  			return 0;
  			break;
