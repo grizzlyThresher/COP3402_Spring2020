@@ -228,11 +228,49 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
 }
 int condition(instruction** code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
+ 	if (tokens[*curToken]->token == oddsym) {
+ 		*curToken = *curToken + 1;
+ 		expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken);
 
-	return 0;
-}
-int relop(instruction** code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
+ 		code[0][(*numInstructions) - 1].r = 0;
+ 		addInstruction(code, ODD, 0, 0, 0, numInstructions);
+ 	} else {
+ 		expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken);
+
+ 		code[0][(*numInstructions) - 1].r = 0;
+
+ 		op_code op;
+ 		switch(tokens[*curToken]->token) {
+ 			case eqsym:
+ 				op = EQL;
+ 				break;
+ 			case neqsym:
+ 				op = NEQ;
+ 				break;
+ 			case lessym:
+ 				op = LSS;
+ 				break;
+ 			case leqsym:
+ 				op = LEQ;
+ 				break;
+ 			case gtrsym:
+ 				op = GTR;
+ 				break;
+ 			case geqsym:
+ 				op = GEQ;
+ 				break;
+ 			default:
+  				fprintf(stderr, "Parsing Error 0%d at Line (%d): Relational Operator Expected\n",
+			 		relopExpectedError, tokens[*curToken]->lineNum);
+ 				return 1;
+ 		}
+
+ 		*curToken = *curToken + 1;
+ 		expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken);
+
+ 		code[0][(*numInstructions) - 1].r = 1;
+ 		addInstruction(code, op, 0, 0, 1, numInstructions);
+ 	}
 
 	return 0;
 }
