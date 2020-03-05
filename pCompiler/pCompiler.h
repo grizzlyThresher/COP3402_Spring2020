@@ -71,7 +71,7 @@ typedef enum {
 	semicolonExpectedError, eqlExpectedError, numberExpectedError,
 	constAlreadyExists, endExpectedError, thenExpectedError,
 	doExpectedError, relopExpectedError, constReassignError, 
-	becomesExpectedError
+	becomesExpectedError, invalidExpressionError
 } error_type;
 
 // struct used to store errors to be printed at a later time

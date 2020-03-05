@@ -247,6 +247,12 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  		case readsym:
 
  			*curToken = *curToken + 1;
+ 			if (tokens[*curToken]->token != identsym) {
+ 				fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
+			 	 identifierExpectedError, tokens[*curToken]->lineNum);
+				return 1;
+ 			}
+
  			curSym = findSymbol(*symbolTable, tokens[*curToken]->value, *numSymbols);
  			if (curSym == NULL) {
  				return 1;
@@ -263,6 +269,12 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  		case writesym:
 
  			*curToken = *curToken + 1;
+ 			if (tokens[*curToken]->token != identsym) {
+ 				fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
+			 	 identifierExpectedError, tokens[*curToken]->lineNum);
+				return 1;
+ 			}
+
  			curSym = findSymbol(*symbolTable, tokens[*curToken]->value, *numSymbols);
  			if (curSym == NULL) {
  				return 1;
@@ -320,7 +332,9 @@ int condition(instruction** code, symbol*** symbolTable, int* numSymbols,
  		}
 
  		*curToken = *curToken + 1;
- 		expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken);
+ 		if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 			return 1;
+ 		}
 
  		code[0][(*numInstructions) - 1].r = 1;
  		addInstruction(code, op, 0, 0, 1, numInstructions);
@@ -331,15 +345,107 @@ int condition(instruction** code, symbol*** symbolTable, int* numSymbols,
 int expression(instruction** code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
 
+ 	token_type addOp = 0;
+ 	if (tokens[*curToken]->token == plussym) {
+ 		addOp = plussym;
+ 		*curToken = *curToken + 1;
+ 	} else if (tokens[*curToken]->token == minussym) {
+ 		addOp = minussym;
+ 		*curToken = *curToken + 1;
+ 	}
+
+ 	if (term(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 		return 1;
+ 	}
+
+ 	code[0][(*numInstructions) - 1].r = 0;
+ 	if (addOp == minussym) {
+ 		addInstruction(code, NEG, 0, 0, 0, numInstructions);
+ 	}
+
+ 	while (tokens[*curToken]->token == plussym || tokens[*curToken]->token == minussym) {
+ 		addOp = tokens[*curToken]->token;
+ 		*curToken = *curToken + 1;
+
+ 		if (term(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 			return 1;
+ 		}
+
+ 		code[0][(*numInstructions) - 1].r = 1;
+ 		if (addOp == plussym) {
+ 			addInstruction(code, ADD, 0, 0, 1, numInstructions);
+ 		} else if (addOp == minussym) {
+ 			addInstruction(code, SUB, 0, 0, 1, numInstructions);
+ 		}
+ 	}
+
 	return 0;
 }
 int term(instruction** code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
 
+	if (factor(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 		return 1;
+ 	}
+ 	code[0][(*numInstructions) - 1].r = 1;
+
+ 	token_type mulOp = 0;
+
+ 	while (tokens[*curToken]->token == multsym || tokens[*curToken]->token == slashsym) {
+ 		mulOp = tokens[*curToken]->token;
+ 		*curToken = *curToken + 1;
+
+ 		if (factor(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 			return 1;
+ 		}
+ 		code[0][(*numInstructions) - 1].r = 2;
+
+ 		if (mulOp == multsym) {
+ 			addInstruction(code, MUL, 1, 1, 2, numInstructions);
+ 		} else if (mulOp == slashsym) {
+ 			addInstruction(code, DIV, 1, 1, 2, numInstructions);
+ 		}
+ 	}
+
 	return 0;
 }
 int factor(instruction** code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
+
+ 	symbol* curSym;
+
+	switch (tokens[*curToken]->token) {
+		case identsym:
+
+			curSym = findSymbol(*symbolTable, tokens[*curToken]->value, *numSymbols);
+			if (curSym == NULL) {
+				return 1;
+			}
+			addInstruction(code, LOD, 2, 0, curSym->address, numInstructions);
+			break;
+		case numbersym:
+			addInstruction(code, LIT, 2, 0, convertToInt(tokens[*curToken]->value), numInstructions);
+			break;
+		case lparentsym:
+			*curToken = *curToken + 1;
+
+			if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 				return 1;
+ 			}
+
+ 			if (tokens[*curToken]->token != rparentsym) {
+ 				fprintf(stderr, "Parsing Error 0%d at Line (%d): Closing Parentheses Expected.\n",
+			 	 invalidExpressionError, tokens[*curToken]->lineNum);
+ 				return 1;
+ 			}
+			break;
+		default:
+			fprintf(stderr, "Parsing Error 0%d at Line (%d): \"%s\" Is Not A Valid Symbol In An Expression.\n",
+			 	invalidExpressionError, tokens[*curToken]->lineNum, tokens[*curToken]->value);
+ 			return 1;
+ 			break;
+	}
+	*curToken = *curToken + 1;
 
 	return 0;
 }
