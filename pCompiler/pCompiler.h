@@ -33,14 +33,13 @@ typedef struct{
 #define BAD_OPERATION fprintf(stderr, "Runtime Error: Invalid Operation.\n");
 
 // Method used to print current state of the machine
-void printState(int* stack, int curLoc, instruction ir, int pc, int bp, int sp, int* regFile, int l, FILE* output, char** oper);
+void printState(int* stack, int curLoc, instruction ir, int pc, int bp, int sp, int* regFile, int l, FILE* output, char** oper, int printMachine);
 // Method used for formatting in the event a value requires 2 digits.
 void makeBuffer(char *str, int num, int maxSize);
 // Method used to redefine base
 int base(int* stack, int l, int base);
 // Method used to export the Virtual Machine running to the compiler
-int execute(instruction* code, FILE* opr);
-
+void execute(instruction* code, FILE* opr, int printMachine, int printParse, int numInstructions);
 
 
 /*

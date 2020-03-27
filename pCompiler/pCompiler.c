@@ -50,6 +50,8 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "Error in Parser. Program Failed to Compile\n");
 		return 0;
 	}
+
+	execute(code, opr, printMachine, printParse, numInstructions);
 	
 	return 1;
 }
