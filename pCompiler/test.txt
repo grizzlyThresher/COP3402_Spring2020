@@ -1,7 +1,9 @@
 const dark = 7;
 var x,y,a; 
 begin 
-	if a = dark then
-	x := 72;
+	
+	while a < dark do
+	a := a + 1;
+	
 
 end.

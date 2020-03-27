@@ -45,12 +45,12 @@ int main(int argc, char* argv[]) {
 	}
 
 	int numInstructions = 0;
-	instruction* code = malloc(sizeof(instruction*));
-	if (parse(tokens, numTokens, opr, &numInstructions, &code) == 1) {
+	instruction *code = parse(tokens, numTokens, opr, &numInstructions);
+	if ( code == NULL) {
 		fprintf(stderr, "Error in Parser. Program Failed to Compile\n");
 		return 0;
 	}
-	code[0].op = INC;
+
 
 	execute(code, opr, printMachine, printParse, numInstructions);
 	

@@ -8,20 +8,21 @@
 #include "pCompiler.h"
 
 // Method to handle parsing and code generation
-int parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructions, instruction **code) {
+instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructions) {
 	symbol** symbolTable = NULL;
+	static instruction code[MAX_CODE_LENGTH];
 	int numSymbols = 0;
 	int curToken = 0;
 	if (program(code, &symbolTable, &numSymbols, tokens, numTokens, numInstructions, &curToken) == 0) {
-		
-		return 0;
+		printf("%d\n", code[0].op);
+		return code;
 	} else
-		return 1;
+		return NULL;
 
 }
 
 // Every non-terminal in the Language Grammar is represented by a function.
-int program(instruction** code, symbol*** symbolTable, int* numSymbols,
+int program(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
 
  	if (block(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
@@ -37,7 +38,7 @@ int program(instruction** code, symbol*** symbolTable, int* numSymbols,
 	
 }
 
-int block(instruction** code, symbol*** symbolTable, int* numSymbols,
+int block(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
 
  	if (tokens[*curToken]->token == constsym) {
@@ -51,10 +52,12 @@ int block(instruction** code, symbol*** symbolTable, int* numSymbols,
  		}
  	}
 
-	return statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken);
+ 	int curReg = 0;
+
+	return statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, &curReg);
 }
 
-int constdeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
+int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
 
 	char* curIdent;
@@ -115,7 +118,7 @@ int constdeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 	return 0;
 }
 
-int vardeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
+int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
 
  	char* curIdent;
@@ -133,7 +136,7 @@ int vardeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 			return 1;
 		}
 
-		added = addSymbol(symbolTable, numSymbols, 2, tokens[*curToken]->value, "0", 0, numVars++);
+		added = addSymbol(symbolTable, numSymbols, 2, tokens[*curToken]->value, "0", 0, (numVars++) + 4);
 		if (added == varAlreadyExistsError) {
 			fprintf(stderr, "Parsing Error 0%d: Variable \"%s\" already exists.\n",
 			 varAlreadyExistsError, tokens[*curToken]->value);
@@ -155,18 +158,19 @@ int vardeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 		return 1;
 	}
 
-	addInstruction(code, INC, 0, 0, numVars, numInstructions);
+	addInstruction(code, INC, 0, 0, numVars + 4, numInstructions);
 	if (getToken(curToken, numTokens, tokens)) {
 		return 1;
 	}
 
 	return 0;
 }
-int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken) {
+int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg) {
 
-	int tmpInstruction, jmpInstruction, *curReg;
+	int tmpInstruction, jmpInstruction;
 	symbol *curSym;
+
 	// Used to keep track of registers being used
 	*curReg = 0;
 
@@ -206,11 +210,11 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  				if (getToken(curToken, numTokens, tokens)) {
  					return 1;
  				}
- 				
- 				if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+
+ 				if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
  					return 1;
  				}
- 				printf("\n\n");
+ 			
  			} while (tokens[*curToken]->token == semicolonsym);
  			
 
@@ -229,9 +233,11 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  			if (getToken(curToken, numTokens, tokens)) {
  				return 1;
  			}
+ 			fprintf(stderr, "Starting If statement\n");
  			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
  				return 1;
  			}
+ 			fprintf(stderr, "Condition Read\n");
  			if (tokens[*curToken]->token != thensym) {
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): \"then\" Expected\n",
 			 thenExpectedError, tokens[*curToken]->lineNum);
@@ -242,12 +248,14 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  			}
  			tmpInstruction = *numInstructions;
  			addInstruction(code, JPC, 0, 0, 0, numInstructions);
+ 			fprintf(stderr, "JPC Added, starting Statement\n");
 
- 			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
  				return 1;
  			}
+ 			fprintf(stderr, "Statement read, changing JPC location\n");
 
- 			code[0][tmpInstruction].m = (*numInstructions);
+ 			code[tmpInstruction].m = (*numInstructions-1);
  			break;
 
  		case whilesym:
@@ -270,12 +278,12 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  			tmpInstruction = *numInstructions;
  			addInstruction(code, JPC, 0, 0, 0, numInstructions);
 
- 			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
+ 			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
  				return 1;
  			}
 
  			addInstruction(code, JMP, 0, 0, jmpInstruction, numInstructions);
- 			code[0][tmpInstruction].m = (*numInstructions);
+ 			code[tmpInstruction].m = (*numInstructions);
  			break;
 
  		case readsym:
@@ -334,9 +342,8 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
 
 	return 0;
 }
-int condition(instruction** code, symbol*** symbolTable, int* numSymbols,
+int condition(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg) {
- 	*curReg = *curReg + 1;
  	int tmpReg = *curReg;
  	if (tokens[*curToken]->token == oddsym) {
  		if (getToken(curToken, numTokens, tokens)) {
@@ -389,7 +396,7 @@ int condition(instruction** code, symbol*** symbolTable, int* numSymbols,
 
 	return 0;
 }
-int expression(instruction** code, symbol*** symbolTable, int* numSymbols,
+int expression(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg) {
 
 	// Keeps track of register used at beginning of expresion
@@ -438,7 +445,7 @@ int expression(instruction** code, symbol*** symbolTable, int* numSymbols,
 
 	return 0;
 }
-int term(instruction** code, symbol*** symbolTable, int* numSymbols,
+int term(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg) {
 
 	// Keeps track of register used at beginning of term
@@ -470,7 +477,7 @@ int term(instruction** code, symbol*** symbolTable, int* numSymbols,
 
 	return 0;
 }
-int factor(instruction** code, symbol*** symbolTable, int* numSymbols,
+int factor(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg) {
 
  	symbol* curSym;
@@ -570,17 +577,16 @@ int deleteSymbol(symbol** symbolTable, char* name, int numSymbols) {
 }
 
 // Adds new instruction to the given code array.
-int addInstruction(instruction** code, op_code op, int r, int l, int m, int* numInstructions) {
+int addInstruction(instruction* code, op_code op, int r, int l, int m, int* numInstructions) {
 	*numInstructions = *numInstructions + 1;
 	if (*numInstructions > MAX_CODE_LENGTH) {
 		fprintf(stderr, "Error: Generated Assembly Code Too Long.\n");
 		return 1;
 	}
-	code[0] = realloc(code[0], (*numInstructions * sizeof(instruction)));
-	code[0][*numInstructions - 1].op = op;
-	code[0][*numInstructions - 1].r = r;
-	code[0][*numInstructions - 1].l = l;
-	code[0][*numInstructions - 1].m = m;
+	code[*numInstructions - 1].op = op;
+	code[*numInstructions - 1].r = r;
+	code[*numInstructions - 1].l = l;
+	code[*numInstructions - 1].m = m;
 
 	return 0;
 
