@@ -191,6 +191,7 @@ void execute(instruction* code, FILE* opr, int printMachine, int printParse, int
             default:
                 BAD_OPERATION
                 halt = 1;
+                return;
                 break;
 		}
         // Prints out current state of the machine
@@ -244,11 +245,11 @@ void printState(int* stack, int curLoc, instruction ir, int pc, int bp, int sp, 
             lineCnt--;
         } else {
             fprintf(output, "%d ", stack[i]);
-            if(printMachine == 1) fprintf(output, "%d ", stack[i]);
+            if(printMachine == 1) fprintf(stdout, "%d ", stack[i]);
         }
     }
     fprintf(output, "\n\n");
-    if(printMachine == 1) fprintf(output, "\n\n");
+    if(printMachine == 1) fprintf(stdout, "\n\n");
     free(buffer);
 }
 

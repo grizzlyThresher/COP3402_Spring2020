@@ -1,6 +1,7 @@
+const dark = 7;
 var x,y,a; 
 begin 
-	y:= x +a;
-	x:= y + 56;
+	if a = dark then
+	x := 72;
 
 end.

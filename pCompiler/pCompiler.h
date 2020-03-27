@@ -70,7 +70,7 @@ typedef enum {
 	semicolonExpectedError, eqlExpectedError, numberExpectedError,
 	constAlreadyExists, endExpectedError, thenExpectedError,
 	doExpectedError, relopExpectedError, constReassignError, 
-	becomesExpectedError, invalidExpressionError
+	becomesExpectedError, invalidExpressionError, incompleteProgramError
 } error_type;
 
 // struct used to store errors to be printed at a later time
@@ -149,8 +149,4 @@ int deleteSymbol(symbol** symbolTabe, char* name, int numSymbols);
 // Method used for adding instructions during code generation
 int addInstruction(instruction** code, op_code op, int r, int l, int m, int* numInstructions);
 
-// Method used to handle conversion from string to number
-int convertToInt(char* num);
-
-// Method used to find power of 10 for conversion from string to number
-int power10(int place);
+int getToken(int *curToken, int numTokens, lexeme **tokens);

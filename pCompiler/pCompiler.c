@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	int numInstructions = 0;
-	instruction* code = malloc(sizeof(instruction));
+	instruction* code = malloc(sizeof(instruction*));
 	if (parse(tokens, numTokens, opr, &numInstructions, &code) == 1) {
 		fprintf(stderr, "Error in Parser. Program Failed to Compile\n");
 		return 0;

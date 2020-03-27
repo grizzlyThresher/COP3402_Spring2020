@@ -1,14 +1,20 @@
 Source Program:
+const dark = 7;
 var x,y,a; 
 begin 
-	y:= x +a;
-	x:= y + 56;
+	if a = dark then
+	x := 72;
 
 end.
 
 
 Lexeme Table:
 lexeme           token type
+const            28
+dark             2
+=                9
+7                3
+;                18
 var              29
 x                2
 ,                17
@@ -17,21 +23,31 @@ y                2
 a                2
 ;                18
 begin            21
-y                2
-:=               20
-x                2
-+                4
+if               23
 a                2
-;                18
+=                9
+dark             2
+then             24
 x                2
 :=               20
-y                2
-+                4
-56               3
+72               3
 ;                18
 end              22
 .                19
 
 
 Lexeme List:
-29|2|x|17|2|y|17|2|a|18|21|2|y|20|2|x|4|2|a|18|2|x|20|2|y|4|3|56|18|22|19|
+28|2|dark|9|3|7|18|29|2|x|17|2|y|17|2|a|18|21|23|2|a|9|2|dark|24|2|x|20|3|72|18|22|19|
+0      _‘c‘g‘k‘o‘s‘w‘{‘‘É‘á‘          0   0    3 
+1      lod    1   0    2 
+2      lit    2   0    7 
+3      eql    1   1    2 
+4      jpc    0   0    7 
+5      lit    0   0    72 
+6      sto    0   0    0 
+7      sio    0   0    3 
+
+
+                          pc    bp    sp    registers
+Initial values:           0     1     0     0   0   0   0   0   0   0   0
+

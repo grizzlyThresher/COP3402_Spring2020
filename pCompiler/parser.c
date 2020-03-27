@@ -12,7 +12,11 @@ int parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructions, instr
 	symbol** symbolTable = NULL;
 	int numSymbols = 0;
 	int curToken = 0;
-	return (program(code, &symbolTable, &numSymbols, tokens, numTokens, numInstructions, &curToken) == 1);
+	if (program(code, &symbolTable, &numSymbols, tokens, numTokens, numInstructions, &curToken) == 0) {
+		
+		return 0;
+	} else
+		return 1;
 
 }
 
@@ -58,7 +62,9 @@ int constdeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 	int added;
 	do {
 
-		*curToken = *curToken + 1;
+		if (getToken(curToken, numTokens, tokens)) {
+			return 1;
+		}
 		if (tokens[*curToken]->token != identsym) {
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
 			 identifierExpectedError, tokens[*curToken]->lineNum);
@@ -66,14 +72,18 @@ int constdeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 		}
 		curIdent = tokens[*curToken]->value;
 
-		*curToken = *curToken + 1;
+		if (getToken(curToken, numTokens, tokens)) {
+			return 1;
+		}
 		if (tokens[*curToken]->token != eqsym) {
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): \"=\" Expected.\n",
 			 eqlExpectedError, tokens[*curToken]->lineNum);
 			return 1;
 		}
 
-		*curToken = *curToken + 1;
+		if (getToken(curToken, numTokens, tokens)) {
+			return 1;
+		}
 		if (tokens[*curToken]->token != numbersym) {
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): Number Expected\n",
 			 numberExpectedError, tokens[*curToken]->lineNum);
@@ -88,7 +98,9 @@ int constdeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 			 constAlreadyExists, curIdent);
 		}
 
-		*curToken = *curToken + 1;
+		if (getToken(curToken, numTokens, tokens)) {
+			return 1;
+		}
 
 	} while (tokens[*curToken]->token == commasym);
 
@@ -97,7 +109,9 @@ int constdeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 			 semicolonExpectedError, tokens[*curToken]->lineNum);
 		return 1;
 	}
-	*curToken = *curToken + 1;
+	if (getToken(curToken, numTokens, tokens)) {
+		return 1;
+	}
 	return 0;
 }
 
@@ -110,8 +124,9 @@ int vardeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 
 	do {
 
-		*curToken = *curToken + 1;
-		fprintf(stderr, "%s\n", tokens[*curToken]->value);
+		if (getToken(curToken, numTokens, tokens)) {
+			return 1;
+		}
 		if (tokens[*curToken]->token != identsym) {
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected.\n",
 			 identifierExpectedError, tokens[*curToken]->lineNum);
@@ -127,7 +142,10 @@ int vardeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 
 		
 
-		*curToken = *curToken + 1;
+		if (getToken(curToken, numTokens, tokens)) {
+			return 1;
+		}
+
 	} while (tokens[*curToken]->token == commasym);
 
 
@@ -136,8 +154,11 @@ int vardeclaration(instruction** code, symbol*** symbolTable, int* numSymbols,
 			 semicolonExpectedError, tokens[*curToken]->lineNum);
 		return 1;
 	}
+
 	addInstruction(code, INC, 0, 0, numVars, numInstructions);
-	*curToken = *curToken + 1;
+	if (getToken(curToken, numTokens, tokens)) {
+		return 1;
+	}
 
 	return 0;
 }
@@ -147,7 +168,7 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
 	int tmpInstruction, jmpInstruction, *curReg;
 	symbol *curSym;
 	// Used to keep track of registers being used
-	*curReg = -1;
+	*curReg = 0;
 
  	switch (tokens[*curToken]->token) {
  		case identsym:
@@ -161,14 +182,18 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
 
- 			*curToken = *curToken + 1;
+ 			if (getToken(curToken, numTokens, tokens)) {
+ 				return 1;
+ 			}
  			if (tokens[*curToken]->token != becomessym) {
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): \":=\" Expected\n",
 			 becomesExpectedError, tokens[*curToken]->lineNum);
  				return 1;
  			}
 
- 			*curToken = *curToken + 1;
+ 			if (getToken(curToken, numTokens, tokens)) {
+ 				return 1;
+ 			}
  			if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
  				return 1;
  			}
@@ -176,16 +201,18 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  			addInstruction(code, STO, *curReg, 0, curSym->address, numInstructions);
  			break;
  		case beginsym:
- 			fprintf(stderr, "%s\n", tokens[*curToken]->value);
- 			*curToken = *curToken + 1;
+ 			
  			do {
-
+ 				if (getToken(curToken, numTokens, tokens)) {
+ 					return 1;
+ 				}
+ 				
  				if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken) == 1) {
  					return 1;
  				}
-
+ 				printf("\n\n");
  			} while (tokens[*curToken]->token == semicolonsym);
- 			fprintf(stderr, "%s\n", tokens[*curToken]->value);
+ 			
 
  			if (tokens[*curToken]->token != endsym) {
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): \"end\" Expected.\n",
@@ -193,11 +220,15 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
 
- 			*curToken = *curToken + 1;
+ 			if (getToken(curToken, numTokens, tokens)) {
+ 				return 1;
+ 			}
  			break;
 
  		case ifsym:
- 			*curToken = *curToken + 1;
+ 			if (getToken(curToken, numTokens, tokens)) {
+ 				return 1;
+ 			}
  			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
  				return 1;
  			}
@@ -206,7 +237,9 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
 			 thenExpectedError, tokens[*curToken]->lineNum);
  				return 1;
  			}
- 			*curToken = *curToken + 1;
+ 			if (getToken(curToken, numTokens, tokens)) {
+ 				return 1;
+ 			}
  			tmpInstruction = *numInstructions;
  			addInstruction(code, JPC, 0, 0, 0, numInstructions);
 
@@ -218,7 +251,9 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  			break;
 
  		case whilesym:
- 			*curToken = *curToken + 1;
+ 			if (getToken(curToken, numTokens, tokens)) {
+ 				return 1;
+ 			}
  			jmpInstruction = *numInstructions;
  			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
  				return 1;
@@ -229,7 +264,9 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
 
- 			*curToken = *curToken + 1;
+ 			if (getToken(curToken, numTokens, tokens)) {
+ 				return 1;
+ 			}
  			tmpInstruction = *numInstructions;
  			addInstruction(code, JPC, 0, 0, 0, numInstructions);
 
@@ -243,7 +280,9 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
 
  		case readsym:
 
- 			*curToken = *curToken + 1;
+ 			if (getToken(curToken, numTokens, tokens)) {
+ 				return 1;
+ 			}
  			if (tokens[*curToken]->token != identsym) {
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
 			 	 identifierExpectedError, tokens[*curToken]->lineNum);
@@ -260,12 +299,16 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  			}
  			addInstruction(code, SIO, 0, 0, 2, numInstructions);
  			addInstruction(code, STO, 0, 0, curSym->address, numInstructions);
- 			*curToken = *curToken + 1;
+ 			if (getToken(curToken, numTokens, tokens)) {
+ 				return 1;
+ 			}
  			break;
 
  		case writesym:
 
- 			*curToken = *curToken + 1;
+ 			if (getToken(curToken, numTokens, tokens)) {
+ 				return 1;
+ 			}
  			if (tokens[*curToken]->token != identsym) {
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
 			 	 identifierExpectedError, tokens[*curToken]->lineNum);
@@ -278,12 +321,13 @@ int statement(instruction** code, symbol*** symbolTable, int* numSymbols,
  			}
  			addInstruction(code, LOD, 0, 0, curSym->address, numInstructions);
  			addInstruction(code, SIO, 0, 0, 1, numInstructions);
- 			*curToken = *curToken + 1;
+ 			if (getToken(curToken, numTokens, tokens)) {
+ 				return 1;
+ 			}
 
  			break;
 
  		default:
- 			*curToken = *curToken - 1;
  			return 0;
  			break;
  	}
@@ -295,7 +339,9 @@ int condition(instruction** code, symbol*** symbolTable, int* numSymbols,
  	*curReg = *curReg + 1;
  	int tmpReg = *curReg;
  	if (tokens[*curToken]->token == oddsym) {
- 		*curToken = *curToken + 1;
+ 		if (getToken(curToken, numTokens, tokens)) {
+ 			return 1;
+ 		}
  		expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg);
 
  		addInstruction(code, ODD, tmpReg, 0, 0, numInstructions);
@@ -328,7 +374,9 @@ int condition(instruction** code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  		}
 
- 		*curToken = *curToken + 1;
+ 		if (getToken(curToken, numTokens, tokens)) {
+ 			return 1;
+ 		}
  		*curReg = *curReg + 1;
  		if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
  			return 1;
@@ -351,10 +399,14 @@ int expression(instruction** code, symbol*** symbolTable, int* numSymbols,
  	token_type addOp = 0;
  	if (tokens[*curToken]->token == plussym) {
  		addOp = plussym;
- 		*curToken = *curToken + 1;
+ 		if (getToken(curToken, numTokens, tokens)) {
+ 			return 1;
+ 		}
  	} else if (tokens[*curToken]->token == minussym) {
  		addOp = minussym;
- 		*curToken = *curToken + 1;
+ 		if (getToken(curToken, numTokens, tokens)) {
+ 			return 1;
+ 		}
  	}
 
  	if (term(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
@@ -367,7 +419,9 @@ int expression(instruction** code, symbol*** symbolTable, int* numSymbols,
 
  	while (tokens[*curToken]->token == plussym || tokens[*curToken]->token == minussym) {
  		addOp = tokens[*curToken]->token;
- 		*curToken = *curToken + 1;
+ 		if (getToken(curToken, numTokens, tokens)) {
+ 			return 1;
+ 		}
 
  		*curReg = *curReg + 1;
  		if (term(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
@@ -397,7 +451,9 @@ int term(instruction** code, symbol*** symbolTable, int* numSymbols,
 
  	while (tokens[*curToken]->token == multsym || tokens[*curToken]->token == slashsym) {
  		mulOp = tokens[*curToken]->token;
- 		*curToken = *curToken + 1;
+ 		if (getToken(curToken, numTokens, tokens)) {
+ 			return 1;
+ 		}
 
  		*curReg = *curReg + 1;
  		if (factor(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
@@ -433,11 +489,13 @@ int factor(instruction** code, symbol*** symbolTable, int* numSymbols,
 			}
 			break;
 		case numbersym:
-			addInstruction(code, LIT, *curReg, 0, convertToInt(tokens[*curToken]->value), numInstructions);
+			addInstruction(code, LIT, *curReg, 0, atoi(tokens[*curToken]->value), numInstructions);
 			break;
 		case lparentsym:
 
-			*curToken = *curToken + 1;
+			if (getToken(curToken, numTokens, tokens)) {
+				return 1;
+			}
 			if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
  				return 1;
  			}
@@ -454,7 +512,9 @@ int factor(instruction** code, symbol*** symbolTable, int* numSymbols,
  			return 1;
  			break;
 	}
-	*curToken = *curToken + 1;
+	if (getToken(curToken, numTokens, tokens)) {
+		return 1;
+	}
 
 	return 0;
 }
@@ -480,7 +540,7 @@ int addSymbol(symbol*** symbolTable, int* numSymbols, int kind, char* name, char
 	symbolTable[0][*numSymbols - 1]->kind = kind;
 	symbolTable[0][*numSymbols - 1]->name = malloc(strlen(name) * sizeof(char));
 	strcpy(symbolTable[0][*numSymbols - 1]->name, name);
-	symbolTable[0][*numSymbols - 1]->val = convertToInt(val);
+	symbolTable[0][*numSymbols - 1]->val = atoi(val);
 	symbolTable[0][*numSymbols - 1]->level = level;
 	symbolTable[0][*numSymbols - 1]->address = address;
 	symbolTable[0][*numSymbols - 1]->mark = 0;
@@ -511,13 +571,12 @@ int deleteSymbol(symbol** symbolTable, char* name, int numSymbols) {
 
 // Adds new instruction to the given code array.
 int addInstruction(instruction** code, op_code op, int r, int l, int m, int* numInstructions) {
-	fprintf(stderr, "%s\n", "We're Fine.");
 	*numInstructions = *numInstructions + 1;
 	if (*numInstructions > MAX_CODE_LENGTH) {
 		fprintf(stderr, "Error: Generated Assembly Code Too Long.\n");
 		return 1;
 	}
-	*code = realloc(*code, (*numInstructions * sizeof(instruction)));
+	code[0] = realloc(code[0], (*numInstructions * sizeof(instruction)));
 	code[0][*numInstructions - 1].op = op;
 	code[0][*numInstructions - 1].r = r;
 	code[0][*numInstructions - 1].l = l;
@@ -527,21 +586,13 @@ int addInstruction(instruction** code, op_code op, int r, int l, int m, int* num
 
 }
 
-int convertToInt(char* num) {
-	int value = 0;
-	int numLen = strlen(num);
-	for (int i = 0; i < numLen; i++) {
-		// Conversion from ASCII value to integer value, multiplied by appropriate power of 10
-		value += (num[numLen] - '0') * power10(numLen - (i + 1));
+int getToken(int *curToken, int numTokens, lexeme **tokens) {
+	*curToken = *curToken + 1;
+	int failed = *curToken >= numTokens;
+	if (failed) {
+		fprintf(stderr, "Parsing Error 0%d at Line(%d): Incomplete Program Ends Abruptly.\n",
+		 incompleteProgramError, tokens[*curToken - 1]->lineNum);
 	}
-	return value;
-}
 
-
-int power10(int place) {
-	int value = 1;
-	for (int i = 1; i <= place; i++) {
-		value *= 10;
-	}
-	return value;
+	return failed;
 }
