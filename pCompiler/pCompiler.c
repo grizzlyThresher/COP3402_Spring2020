@@ -50,6 +50,7 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "Error in Parser. Program Failed to Compile\n");
 		return 0;
 	}
+	code[0].op = INC;
 
 	execute(code, opr, printMachine, printParse, numInstructions);
 	
