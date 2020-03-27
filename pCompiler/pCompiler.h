@@ -116,7 +116,7 @@ typedef struct{
 } symbol;
 
 // Method to handle parsing and code generation
-instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int printParse, int* numInstructions);
+int parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructions, instruction **code);
 
 // Every non-terminal in the Language Grammar is represented by a function.
 int program(instruction** code, symbol*** symbolTabe, int* numSymbols,
@@ -130,23 +130,13 @@ int vardeclaration(instruction** code, symbol*** symbolTabe, int* numSymbols,
 int statement(instruction** code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
 int condition(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int relop(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg);
 int expression(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg);
 int term(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg);
 int factor(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int number(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int identifier(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int digit(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int letter(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg);
 
 // Method used to add symbols to the symbol table.
 int addSymbol(symbol*** symbolTabe, int* numSymbols, int kind, char* name, char* val, int level, int address);
