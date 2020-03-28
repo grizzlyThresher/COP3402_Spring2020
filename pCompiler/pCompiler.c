@@ -25,11 +25,14 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	// Indicates an error in the validity of the input file
 	FILE* ipr = fopen(inFile, "r");
 	if(ipr == NULL) {
 		fprintf(stderr, "Could not find valid file by name: %s \n", inFile);
 		return 0;
 	}
+
+	// Indicates an error in the validity of the output file
 	// Will always print all output to output.txt regardless of user command
 	FILE* opr = fopen("output.txt", "w");
 	if(ipr == NULL) {
@@ -37,6 +40,7 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 
+	// Indicates error in lexicographical analyzer
 	int numTokens = 0;
 	lexeme** tokens = lex(ipr, opr, printLex, &numTokens);
 	if (tokens == NULL) {
@@ -44,6 +48,7 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 
+	// Indicates error in parser
 	int numInstructions = 0;
 	instruction* code = parse(tokens, numTokens, opr, printParse, &numInstructions);
 	if (code == NULL) {
@@ -51,7 +56,8 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 
+	// Exports the virtual machine running to the compiler
 	execute(code, opr, printMachine, printParse, numInstructions);
-	
+
 	return 1;
 }
