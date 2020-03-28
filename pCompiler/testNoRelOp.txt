@@ -1,0 +1,10 @@
+const dark = 7;
+var x,y,a; 
+begin 
+	read a;
+	if a  dark then
+		a := a * 4;
+
+		x := a - y;
+	write a;
+end.

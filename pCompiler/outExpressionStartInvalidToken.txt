@@ -1,0 +1,53 @@
+Source Program:
+const dark = 7;
+var x,y,a; 
+begin 
+	read a;
+		*a := a * 4;
+
+		x := a - y;
+	write a;
+end.
+
+
+Lexeme Table:
+lexeme           token type
+const            28
+dark             2
+=                9
+7                3
+;                18
+var              29
+x                2
+,                17
+y                2
+,                17
+a                2
+;                18
+begin            21
+read             32
+a                2
+;                18
+*                6
+a                2
+:=               20
+a                2
+*                6
+4                3
+;                18
+x                2
+:=               20
+a                2
+-                5
+y                2
+;                18
+write            31
+a                2
+;                18
+end              22
+.                19
+
+
+Lexeme List:
+28|2|dark|9|3|7|18|29|2|x|17|2|y|17|2|a|18|21|32|2|a|18|6|2|a|20|2|a|6|3|4|18|2|x|20|2|a|5|2|y|18|31|2|a|18|22|19|
+Parsing Error 015 at Line (5): "end" Expected.

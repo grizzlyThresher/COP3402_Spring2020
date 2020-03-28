@@ -1,0 +1,9 @@
+const dark;
+var x,y,a; 
+begin 
+	read a;
+		a := a * 4;
+
+		x := a - y;
+	write a;
+end.
