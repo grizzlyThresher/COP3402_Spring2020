@@ -8,7 +8,7 @@
 #include "pCompiler.h"
 
 // Method to handle parsing and code generation
-instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructions, FILE* opr) {
+instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructions) {
 	symbol** symbolTable = NULL;
 	static instruction code[MAX_CODE_LENGTH];
 	int numSymbols = 0;
@@ -27,6 +27,7 @@ int program(instruction* code, symbol*** symbolTable, int* numSymbols,
  	if (block(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr) == 1) {
  		return 1;
  	} else if(tokens[*curToken]->token != periodsym) {
+ 		// Prints an error to output file and console if a period was expected
  		fprintf(stderr, "Parsing Error 0%d at Line (%d): Period Expected.\n",
  		 missingPeriodError, tokens[*curToken]->lineNum);
  		fprintf(opr, "Parsing Error 0%d at Line (%d): Period Expected.\n",
@@ -70,6 +71,7 @@ int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 			return 1;
 		}
 		if (tokens[*curToken]->token != identsym) {
+			// Prints an error to output file and console if an identifier was expected
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
 			 identifierExpectedError, tokens[*curToken]->lineNum);
 			fprintf(opr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
@@ -82,6 +84,7 @@ int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 			return 1;
 		}
 		if (tokens[*curToken]->token != eqsym) {
+			// Prints an error to output file and console if "=" was expected
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): \"=\" Expected.\n",
 			 eqlExpectedError, tokens[*curToken]->lineNum);
 			fprintf(opr, "Parsing Error 0%d at Line (%d): \"=\" Expected.\n",
@@ -93,6 +96,7 @@ int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 			return 1;
 		}
 		if (tokens[*curToken]->token != numbersym) {
+			// Prints an error to output file and console if a number was expected
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): Number Expected\n",
 			 numberExpectedError, tokens[*curToken]->lineNum);
 			fprintf(opr, "Parsing Error 0%d at Line (%d): Number Expected\n",
@@ -104,6 +108,7 @@ int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 		// Adds new const to Symbol Table
 		added = addSymbol(symbolTable, numSymbols, 1, curIdent, curNum, -1, -1);
 		if (added == identifierAlreadyConstError) {
+			// Prints an error to output file and console if the constant already exists
 			fprintf(stderr, "Parsing Error 0%d: const \"%s\" Already Exists.\n",
 			 constAlreadyExists, curIdent);
 			fprintf(opr, "Parsing Error 0%d: const \"%s\" Already Exists.\n",
@@ -117,6 +122,7 @@ int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 	} while (tokens[*curToken]->token == commasym);
 
 	if (tokens[*curToken]->token != semicolonsym) {
+		// Prints an error to output file and console if a semicolon was expected
 		fprintf(stderr, "Parsing Error 0%d at Line (%d): Semicolon Expected\n",
 			 semicolonExpectedError, tokens[*curToken]->lineNum);
 		fprintf(opr, "Parsing Error 0%d at Line (%d): Semicolon Expected\n",
@@ -142,6 +148,7 @@ int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 			return 1;
 		}
 		if (tokens[*curToken]->token != identsym) {
+			// Prints an error to output file and console if an identifier was expected
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected.\n",
 			 identifierExpectedError, tokens[*curToken]->lineNum);
 			fprintf(opr, "Parsing Error 0%d at Line (%d): Identifier Expected.\n",
@@ -151,6 +158,7 @@ int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 
 		added = addSymbol(symbolTable, numSymbols, 2, tokens[*curToken]->value, "0", 0, (numVars++) + 4);
 		if (added == varAlreadyExistsError) {
+			// Prints an error to output file and console if the variable already exists
 			fprintf(stderr, "Parsing Error 0%d: Variable \"%s\" already exists.\n",
 			 varAlreadyExistsError, tokens[*curToken]->value);
 			fprintf(opr, "Parsing Error 0%d: Variable \"%s\" already exists.\n",
@@ -166,6 +174,7 @@ int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 
 
 	if (tokens[*curToken]->token != semicolonsym) {
+		// Prints an error to output file and console if a semicolon was expected
 		fprintf(stderr, "Parsing Error 0%d at Line (%d): Semicolon Expected\n",
 			 semicolonExpectedError, tokens[*curToken]->lineNum);
 		fprintf(opr, "Parsing Error 0%d at Line (%d): Semicolon Expected\n",
@@ -197,6 +206,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			if (curSym == NULL) {
  				return 1;
  			} else if (curSym->kind == 1) {
+ 				// Prints an error to output file and console if a value was trying to be reassigned to a constant
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): Cannot Reassign Value to Constant %s.\n",
 			 constReassignError, tokens[*curToken]->lineNum, curSym->name);
  				fprintf(opr, "Parsing Error 0%d at Line (%d): Cannot Reassign Value to Constant %s.\n",
@@ -208,6 +218,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
  			if (tokens[*curToken]->token != becomessym) {
+ 				// Prints an error to output file and console if ":=" was expected
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): \":=\" Expected\n",
 			 becomesExpectedError, tokens[*curToken]->lineNum);
  				fprintf(opr, "Parsing Error 0%d at Line (%d): \":=\" Expected\n",
@@ -239,6 +250,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			
 
  			if (tokens[*curToken]->token != endsym) {
+ 				// Prints an error to output file and console if "end" was expected
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): \"end\" Expected.\n",
 			 endExpectedError, tokens[*curToken]->lineNum);
  				fprintf(opr, "Parsing Error 0%d at Line (%d): \"end\" Expected.\n",
@@ -259,6 +271,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
  			if (tokens[*curToken]->token != thensym) {
+ 				// Prints an error to output file and console if "then" was expected
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): \"then\" Expected\n",
 			 thenExpectedError, tokens[*curToken]->lineNum);
  				fprintf(opr, "Parsing Error 0%d at Line (%d): \"then\" Expected\n",
@@ -287,6 +300,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
  			if (tokens[*curToken]->token != dosym) {
+ 				// Prints an error to output file and console if "do" was expected
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): \"do\" Expected\n",
 			 doExpectedError, tokens[*curToken]->lineNum);
  				fprintf(opr, "Parsing Error 0%d at Line (%d): \"do\" Expected\n",
@@ -314,6 +328,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
  			if (tokens[*curToken]->token != identsym) {
+ 				// Prints an error to output file and console if an identifier was expected
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
 			 	 identifierExpectedError, tokens[*curToken]->lineNum);
  				fprintf(opr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
@@ -325,6 +340,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			if (curSym == NULL) {
  				return 1;
  			} else if (curSym->kind == 1) {
+ 				// Prints an error to output file and console if a value was trying to be reassigned to a constant
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): Cannot Reassign Value to Constant %s.\n",
 			 constReassignError, tokens[*curToken]->lineNum, curSym->name);
  				fprintf(opr, "Parsing Error 0%d at Line (%d): Cannot Reassign Value to Constant %s.\n",
@@ -344,6 +360,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
  			if (tokens[*curToken]->token != identsym) {
+ 				// Prints an error to output file and console if an identifier was expected
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
 			 	 identifierExpectedError, tokens[*curToken]->lineNum);
  				fprintf(opr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
@@ -405,6 +422,7 @@ int condition(instruction* code, symbol*** symbolTable, int* numSymbols,
  				op = GEQ;
  				break;
  			default:
+ 				// Prints an error to output file and console if a relational operator was expected
   				fprintf(stderr, "Parsing Error 0%d at Line (%d): Relational Operator Expected\n",
 			 		relopExpectedError, tokens[*curToken]->lineNum);
   				fprintf(opr, "Parsing Error 0%d at Line (%d): Relational Operator Expected\n",
@@ -542,6 +560,7 @@ int factor(instruction* code, symbol*** symbolTable, int* numSymbols,
  			}
 
  			if (tokens[*curToken]->token != rparentsym) {
+ 				// Prints an error to output file and console if closing parentheses were expected
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): Closing Parentheses Expected.\n",
 			 	 invalidExpressionError, tokens[*curToken]->lineNum);
  				fprintf(opr, "Parsing Error 0%d at Line (%d): Closing Parentheses Expected.\n",
@@ -550,13 +569,14 @@ int factor(instruction* code, symbol*** symbolTable, int* numSymbols,
  			}
 			break;
 		default:
+			// Prints an error to output file and console if the symbol is invalid
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): \"%s\" Is Not A Valid Symbol In An Expression.\n",
 			 	invalidExpressionError, tokens[*curToken]->lineNum, tokens[*curToken]->value);
 			fprintf(opr, "Parsing Error 0%d at Line (%d): \"%s\" Is Not A Valid Symbol In An Expression.\n",
 			 	invalidExpressionError, tokens[*curToken]->lineNum, tokens[*curToken]->value);
  			return 1;
  			break;
-	}
+	} // If there is no next token to be found...
 	if (getToken(curToken, numTokens, tokens, opr)) {
 		return 1;
 	}
@@ -564,7 +584,7 @@ int factor(instruction* code, symbol*** symbolTable, int* numSymbols,
 	return 0;
 }
 
-// Method used to add symbols to the symbol table.
+// Method used to add symbols to the symbol table
 int addSymbol(symbol*** symbolTable, int* numSymbols, int kind, char* name, char* val, int level, int address) {
 	
 	for (int i = *numSymbols - 1; i>= 0; i--) {
@@ -590,20 +610,21 @@ int addSymbol(symbol*** symbolTable, int* numSymbols, int kind, char* name, char
 	return 0;
 }
 
-// Method used for symbol lookup.
+// Method used for symbol lookup
 symbol* findSymbol(symbol** symbolTable, char* name, int numSymbols, FILE* opr) {
 	for (int i = numSymbols - 1; i >= 0; i--) {
 		if ((strcmp(symbolTable[i]->name, name) == 0) && symbolTable[i]->mark == 0) {
 			return symbolTable[i];
 		}
 	}
+	// Prints an error to output file and console if the symbol being searched for does not exist
 	fprintf(stderr, "Parsing Error 0%d: Identifier \"%s\" Does Not Exist.\n", identifierDoesntExistError, name);
 	fprintf(opr, "Parsing Error 0%d: Identifier \"%s\" Does Not Exist.\n", identifierDoesntExistError, name);
 
 	return NULL;
 }
 
-// Method used to simplify symbol deactivation.
+// Method used to simplify symbol deactivation
 int deleteSymbol(symbol** symbolTable, char* name, int numSymbols, FILE* opr) {
 	symbol* removing = findSymbol(symbolTable, name, numSymbols, opr);
 	if (removing == NULL) 
@@ -614,9 +635,10 @@ int deleteSymbol(symbol** symbolTable, char* name, int numSymbols, FILE* opr) {
 	return 0;
 }
 
-// Adds new instruction to the given code array.
+// Method used to add new instruction to the given code array
 int addInstruction(instruction* code, op_code op, int r, int l, int m, int* numInstructions, FILE* opr) {
 	*numInstructions = *numInstructions + 1;
+	// Prints an error to output file and console if the number of instructions is longer than the allowable limit
 	if (*numInstructions > MAX_CODE_LENGTH) {
 		fprintf(stderr, "Error: Generated Assembly Code Too Long.\n");
 		fprintf(opr, "Error: Generated Assembly Code Too Long.\n");
@@ -630,9 +652,11 @@ int addInstruction(instruction* code, op_code op, int r, int l, int m, int* numI
 	return 0;
 }
 
+// Method used to get the next token for use by the parser
 int getToken(int *curToken, int numTokens, lexeme **tokens, FILE* opr) {
 	*curToken = *curToken + 1;
 	int failed = *curToken >= numTokens;
+	// Prints an error to output file and console if the program ends abruptly
 	if (failed) {
 		fprintf(stderr, "Parsing Error 0%d at Line(%d): Incomplete Program Ends Abruptly.\n",
 		 incompleteProgramError, tokens[*curToken - 1]->lineNum);

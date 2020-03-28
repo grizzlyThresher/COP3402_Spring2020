@@ -116,7 +116,7 @@ typedef struct{
 } symbol;
 
 // Method to handle parsing and code generation
-instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructions, FILE* opr);
+instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructions);
 
 // Every non-terminal in the Language Grammar is represented by a function.
 int program(instruction* code, symbol*** symbolTabe, int* numSymbols,
@@ -134,20 +134,21 @@ int condition(instruction* code, symbol*** symbolTabe, int* numSymbols,
 int expression(instruction* code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr);
 int term(instruction* code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg FILE* opr);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr);
 int factor(instruction* code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr);
 
-// Method used to add symbols to the symbol table.
+// Method used to add symbols to the symbol table
 int addSymbol(symbol*** symbolTabe, int* numSymbols, int kind, char* name, char* val, int level, int address);
 
-// Method used for symbol lookup.
+// Method used for symbol lookup
 symbol* findSymbol(symbol** symbolTabe, char* name, int numSymbols, FILE* opr);
 
-// Method used to simplify symbol deactivation.
+// Method used to simplify symbol deactivation
 int deleteSymbol(symbol** symbolTabe, char* name, int numSymbols, FILE* opr);
 
 // Method used for adding instructions during code generation
 int addInstruction(instruction* code, op_code op, int r, int l, int m, int* numInstructions, FILE* opr);
 
+// Method used to get the next token for use by the parser
 int getToken(int *curToken, int numTokens, lexeme **tokens, FILE* opr);
