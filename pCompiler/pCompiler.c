@@ -5,14 +5,33 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <regex.h>
 #include "pCompiler.h"
 
 int main(int argc, char* argv[]) {
-	// Input File should be last argument in command
-	char* inFile = argv[argc-1];
+
+	regex_t isFile;
+	int result;
+	result = regcomp(&isFile, "^.*\.txt$", 0);
+	if (result != 0) {
+		printf("Could not compile regular expression");
+    	return 0;
+	}
+	char *inFile, *outFile;
+	// Used to keep track of how far into the arguments to loop while trying to find a recognized command.
+	int loopTill = 1;
+	// Checks if second to last argument is a text file. If so, it's the input file and the last argument is the output file.
+	if (regexec(&isFile, argv[argc-2], 0, NULL, 0) == 0) {
+		inFile = argv[argc-2];
+		outFile = argv[argc-1];
+		loopTill = 2;
+	} else {
+		inFile = argv[argc-1];
+		outFile = "output.txt";
+	}
 	int printLex = 0, printParse = 0, printMachine = 0;
 
-	for (int i = 1; i < argc - 1; i++) {
+	for (int i = 1; i < argc - loopTill; i++) {
 		if (strcmp("-l", argv[i]) == 0) { // if the -l command is in the command line, print the Lexer Output
 			printLex = 1;
 		} else if (strcmp("-a", argv[i]) == 0) { // if the -a command is in the command line, print the Parser Output
@@ -31,7 +50,7 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 	// Will always print all output to output.txt regardless of user command
-	FILE* opr = fopen("output.txt", "w");
+	FILE* opr = fopen(outFile, "w");
 	if(ipr == NULL) {
 		fprintf(stderr, "Could not find valid file by name: %s \n", inFile);
 		return 0;
@@ -50,6 +69,7 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "Error in Parser. Program Failed to Compile\n");
 		return 0;
 	}
+	fprintf(opr, "No Errors, program is syntactically correct.");
 
 
 	execute(code, opr, printMachine, printParse, numInstructions);
