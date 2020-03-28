@@ -14,7 +14,6 @@ instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructio
 	int numSymbols = 0;
 	int curToken = 0;
 	if (program(code, &symbolTable, &numSymbols, tokens, numTokens, numInstructions, &curToken) == 0) {
-		printf("%d\n", code[0].op);
 		return code;
 	} else
 		return NULL;
@@ -233,11 +232,9 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			if (getToken(curToken, numTokens, tokens)) {
  				return 1;
  			}
- 			fprintf(stderr, "Starting If statement\n");
  			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
  				return 1;
  			}
- 			fprintf(stderr, "Condition Read\n");
  			if (tokens[*curToken]->token != thensym) {
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): \"then\" Expected\n",
 			 thenExpectedError, tokens[*curToken]->lineNum);
@@ -248,14 +245,12 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			}
  			tmpInstruction = *numInstructions;
  			addInstruction(code, JPC, 0, 0, 0, numInstructions);
- 			fprintf(stderr, "JPC Added, starting Statement\n");
 
  			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg) == 1) {
  				return 1;
  			}
- 			fprintf(stderr, "Statement read, changing JPC location\n");
 
- 			code[tmpInstruction].m = (*numInstructions-1);
+ 			code[tmpInstruction].m = (*numInstructions);
  			break;
 
  		case whilesym:

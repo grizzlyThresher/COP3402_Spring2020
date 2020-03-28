@@ -29,6 +29,7 @@ typedef struct{
 #define NUM_REGISTERS 8
 // Potential Error Messages
 #define STACK_OVERFLOW fprintf(stderr, "Runtime Error: Stack Overflow.\n");
+#define INTEGER_OVERFLOW fprintf(stderr, "Runtime Error: Integer Overflow, number too large.\n");
 #define OUT_OF_BOUNDS fprintf(stderr, "Runtime Error: Invalid Memory Location.\n");
 #define BAD_OPERATION fprintf(stderr, "Runtime Error: Invalid Operation.\n");
 

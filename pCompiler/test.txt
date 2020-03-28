@@ -1,9 +1,9 @@
 const dark = 7;
 var x,y,a; 
 begin 
-	
-	while a < dark do
-	a := a + 1;
-	
+	read a;
+		a := a * 99999;
 
+		x := a - y;
+	write a;
 end.
