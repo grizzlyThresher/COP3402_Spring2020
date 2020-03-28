@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "pCompiler.h"
 
 // Method used to export the Virtual Machine running to the compiler
@@ -142,7 +143,13 @@ void execute(instruction* code, FILE* opr, int printMachine, int printParse, int
                         break;
                     case 2: // SIO READ
 	                    printf("Please input a value: ");
-	                    scanf("%d", &registerFile[ir.r]);
+                        int tmp;
+	                    scanf("%d", &tmp);
+                        if (tmp / (int)pow(10, MAX_NUM_LENGTH) != 0) {
+                            INTEGER_OVERFLOW
+                            return;
+                        }
+                        registerFile[ir.r] = tmp;
                         fprintf(opr, "user input was: %d\n", registerFile[ir.r]);
                         break;
                     case 3: // SIO HALT
@@ -154,15 +161,31 @@ void execute(instruction* code, FILE* opr, int printMachine, int printParse, int
             	registerFile[ir.r] = -1 * registerFile[ir.r];
                 break;
             case ADD: // ADD
+                if ((registerFile[ir.l] + registerFile[ir.m]) / (int)pow(10, MAX_NUM_LENGTH) != 0) {
+                    INTEGER_OVERFLOW
+                    return;
+                }
                 registerFile[ir.r] = registerFile[ir.l] + registerFile[ir.m];
                 break;
             case SUB: // SUB
+                if ((registerFile[ir.l] - registerFile[ir.m]) / (int)pow(10, MAX_NUM_LENGTH) != 0) {
+                    INTEGER_OVERFLOW
+                    return;
+                }
             	registerFile[ir.r] = registerFile[ir.l] - registerFile[ir.m];
                 break;
             case MUL: // MUL
+                if ((registerFile[ir.l] * registerFile[ir.m]) / (int)pow(10, MAX_NUM_LENGTH) != 0) {
+                    INTEGER_OVERFLOW
+                    return;
+                }
             	registerFile[ir.r] = registerFile[ir.l] * registerFile[ir.m];
                 break;	
             case DIV: // DIV
+                if ((registerFile[ir.l] / registerFile[ir.m]) / (int)pow(10, MAX_NUM_LENGTH) != 0) {
+                    INTEGER_OVERFLOW
+                    return;
+                }
             	registerFile[ir.r] = registerFile[ir.l] / registerFile[ir.m];
                 break;
             case ODD: // ODD
@@ -192,6 +215,7 @@ void execute(instruction* code, FILE* opr, int printMachine, int printParse, int
             default:
                 BAD_OPERATION
                 halt = 1;
+                return;
                 break;
 		}
         // Prints out current state of the machine
@@ -245,11 +269,11 @@ void printState(int* stack, int curLoc, instruction ir, int pc, int bp, int sp, 
             lineCnt--;
         } else {
             fprintf(output, "%d ", stack[i]);
-            if(printMachine == 1) fprintf(output, "%d ", stack[i]);
+            if(printMachine == 1) fprintf(stdout, "%d ", stack[i]);
         }
     }
     fprintf(output, "\n\n");
-    if(printMachine == 1) fprintf(output, "\n\n");
+    if(printMachine == 1) fprintf(stdout, "\n\n");
     free(buffer);
 }
 

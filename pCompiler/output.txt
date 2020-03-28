@@ -1,14 +1,22 @@
 Source Program:
+const dark = 7;
 var x,y,a; 
 begin 
-	y:= x +a;
-	x:= y + 56;
+	read a;
+		a := a * 99999;
 
+		x := a - y;
+	write a;
 end.
 
 
 Lexeme Table:
 lexeme           token type
+const            28
+dark             2
+=                9
+7                3
+;                18
 var              29
 x                2
 ,                17
@@ -17,21 +25,62 @@ y                2
 a                2
 ;                18
 begin            21
-y                2
-:=               20
-x                2
-+                4
+read             32
 a                2
+;                18
+a                2
+:=               20
+a                2
+*                6
+99999            3
 ;                18
 x                2
 :=               20
+a                2
+-                5
 y                2
-+                4
-56               3
+;                18
+write            31
+a                2
 ;                18
 end              22
 .                19
 
 
 Lexeme List:
-29|2|x|17|2|y|17|2|a|18|21|2|y|20|2|x|4|2|a|18|2|x|20|2|y|4|3|56|18|22|19|
+28|2|dark|9|3|7|18|29|2|x|17|2|y|17|2|a|18|21|32|2|a|18|2|a|20|2|a|6|3|99999|18|2|x|20|2|a|5|2|y|18|31|2|a|18|22|19|
+0      inc    0   0    7 
+1      sio    0   0    2 
+2      sto    0   0    6 
+3      lod    0   0    6 
+4      lit    1   0    99999 
+5      mul    0   0    1 
+6      sto    0   0    6 
+7      lod    0   0    6 
+8      lod    1   0    5 
+9      sub    0   0    1 
+10     sto    0   0    4 
+11     lod    0   0    6 
+12     sio    0   0    1 
+13     sio    0   0    3 
+
+
+                          pc    bp    sp    registers
+Initial values:           0     1     0     0   0   0   0   0   0   0   0
+
+0   inc  0  0  7          1     1     7     0   0   0   0   0   0   0   0   
+Stack: 0 0 0 0 0 0 0 
+
+user input was: 2
+1   sio  0  0  2          2     1     7     2   0   0   0   0   0   0   0   
+Stack: 0 0 0 0 0 0 0 
+
+2   sto  0  0  6          3     1     7     2   0   0   0   0   0   0   0   
+Stack: 0 0 0 0 0 0 2 
+
+3   lod  0  0  6          4     1     7     2   0   0   0   0   0   0   0   
+Stack: 0 0 0 0 0 0 2 
+
+4   lit  1  0  99999        5     1     7     2   99999 0   0   0   0   0   0   
+Stack: 0 0 0 0 0 0 2 
+

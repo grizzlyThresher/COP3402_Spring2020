@@ -1,6 +1,9 @@
+const dark = 7;
 var x,y,a; 
 begin 
-	y:= x +a;
-	x:= y + 56;
+	read a;
+		a := a * 99999;
 
+		x := a - y;
+	write a;
 end.

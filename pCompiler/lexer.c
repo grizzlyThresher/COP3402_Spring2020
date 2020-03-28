@@ -359,6 +359,8 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 			}
 		}
 		fprintf(opr, "\n");
+		if (toConsole == 1)
+			printf("\n");
 		printf("\n");
 	}
 	for (int i = 0; i < numErrors; i++) {

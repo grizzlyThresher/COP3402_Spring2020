@@ -29,6 +29,7 @@ typedef struct{
 #define NUM_REGISTERS 8
 // Potential Error Messages
 #define STACK_OVERFLOW fprintf(stderr, "Runtime Error: Stack Overflow.\n");
+#define INTEGER_OVERFLOW fprintf(stderr, "Runtime Error: Integer Overflow, number too large.\n");
 #define OUT_OF_BOUNDS fprintf(stderr, "Runtime Error: Invalid Memory Location.\n");
 #define BAD_OPERATION fprintf(stderr, "Runtime Error: Invalid Operation.\n");
 
@@ -70,7 +71,7 @@ typedef enum {
 	semicolonExpectedError, eqlExpectedError, numberExpectedError,
 	constAlreadyExists, endExpectedError, thenExpectedError,
 	doExpectedError, relopExpectedError, constReassignError, 
-	becomesExpectedError, invalidExpressionError
+	becomesExpectedError, invalidExpressionError, incompleteProgramError
 } error_type;
 
 // struct used to store errors to be printed at a later time
@@ -115,37 +116,27 @@ typedef struct{
 } symbol;
 
 // Method to handle parsing and code generation
-instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int printParse, int* numInstructions);
+instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructions);
 
 // Every non-terminal in the Language Grammar is represented by a function.
-int program(instruction** code, symbol*** symbolTabe, int* numSymbols,
+int program(instruction* code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int block(instruction** code, symbol*** symbolTabe, int* numSymbols,
+int block(instruction* code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int constdeclaration(instruction** code, symbol*** symbolTabe, int* numSymbols,
+int constdeclaration(instruction* code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int vardeclaration(instruction** code, symbol*** symbolTabe, int* numSymbols,
+int vardeclaration(instruction* code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int statement(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int condition(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int relop(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int expression(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int term(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int factor(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int number(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int identifier(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int digit(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
-int letter(instruction** code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken);
+int statement(instruction* code, symbol*** symbolTabe, int* numSymbols,
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg);
+int condition(instruction* code, symbol*** symbolTabe, int* numSymbols,
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg);
+int expression(instruction* code, symbol*** symbolTabe, int* numSymbols,
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg);
+int term(instruction* code, symbol*** symbolTabe, int* numSymbols,
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg);
+int factor(instruction* code, symbol*** symbolTabe, int* numSymbols,
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg);
 
 // Method used to add symbols to the symbol table.
 int addSymbol(symbol*** symbolTabe, int* numSymbols, int kind, char* name, char* val, int level, int address);
@@ -157,10 +148,6 @@ symbol* findSymbol(symbol** symbolTabe, char* name, int numSymbols);
 int deleteSymbol(symbol** symbolTabe, char* name, int numSymbols);
 
 // Method used for adding instructions during code generation
-int addInstruction(instruction** code, op_code op, int r, int l, int m, int* numInstructions);
+int addInstruction(instruction* code, op_code op, int r, int l, int m, int* numInstructions);
 
-// Method used to handle conversion from string to number
-int convertToInt(char* num);
-
-// Method used to find power of 10 for conversion from string to number
-int power10(int place);
+int getToken(int *curToken, int numTokens, lexeme **tokens);
