@@ -44,7 +44,6 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 	token_type state = nulsym;
 
 	fprintf(opr, "Source Program:\n");
-	printf("Source Program:\n");
 
 	int ungot = 0; // Used to check if we've had to call ungetc() for that pass of the loop.
 	int badVar = 0; // Used to check if the potential identifier starts with a number
@@ -291,7 +290,6 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 
 		if (ungot == 0) { // If the current char has to be checked again, don't print it out yet
 			fprintf(opr, "%c", tmpC);
-			printf("%c", tmpC);
 		}
 	} while(1);
 
@@ -300,22 +298,28 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 
 	if (numErrors >= 1) { // If any errors were encountered in the input file, prints error and all associated info
 		for (int i = 0; i < numErrors; i++) {
-			printf("****Lexing Error 00%d at Line (%d): ",errorList[i]->type, errorList[i]->lineNum);
+			printf("****Lexing Error 0%d at Line (%d): ",errorList[i]->type, errorList[i]->lineNum);
+			fprintf(opr,"****Lexing Error 0%d at Line (%d): ",errorList[i]->type, errorList[i]->lineNum);
 			switch (errorList[i]->type) {
 				case numLengthError : // Number length exceeds maximum allowed length
 				printf("Number Longer Than %d Digits (%s).\n", MAX_NUM_LENGTH, errorList[i]->value);
+				fprintf(opr,"Number Longer Than %d Digits (%s).\n", MAX_NUM_LENGTH, errorList[i]->value);
 				break;
 				case varLengthError : // Variable length exceeds maximum allowed length
 				printf("Identifier Longer Than %d Characters (\"%s\").\n", MAX_VAR_LENGTH, errorList[i]->value);
+				fprintf(opr,"Identifier Longer Than %d Characters (\"%s\").\n", MAX_VAR_LENGTH, errorList[i]->value);
 				break;
 				case invalidIdentifierError : // Variable is invalid if it begins with a digit
 				printf("Identifier Begins With a Digit (\"%s\").\n", errorList[i]->value);
+				fprintf(opr,"Identifier Begins With a Digit (\"%s\").\n", errorList[i]->value);
 				break;
 				case invalidSymbolError : // The read in symbol is not included in the lexeme
 				printf("Unidentified Symbol (\'%s\').\n", errorList[i]->value);
+				fprintf(opr,"Unidentified Symbol (\'%s\').\n", errorList[i]->value);
 				break;
 				case openCommentError : // A comment was opened in the program but never closed
 				printf("Open Comment Never Closed.\n");
+				fprintf(opr,"Open Comment Never Closed.\n");
 				break;
 			}
 		}
