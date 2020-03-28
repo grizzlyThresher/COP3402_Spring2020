@@ -2,6 +2,7 @@ SRC = $(wildcard *.c)
 OBJ = $(SRC:%.c=%.o)
 PROG = compile
 DEPS = $(wildcard *.h)
+EXEC = ./compile
 
 .PHONY: all clean
 
