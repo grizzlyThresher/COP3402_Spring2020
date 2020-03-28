@@ -8,7 +8,7 @@
 #include <math.h>
 #include "pCompiler.h"
 
-
+// Method used to export the Virtual Machine running to the compiler
 void execute(instruction* code, FILE* opr, int printMachine, int printParse, int numInstructions) {   
 
     // Instantiation of Global variables
@@ -45,6 +45,7 @@ void execute(instruction* code, FILE* opr, int printMachine, int printParse, int
         }
     }
 
+    // Prints to output file and console IF printMachine is active
 	fprintf(opr, "\n\n                          pc    bp    sp    registers\n");
     if(printMachine == 1) fprintf(stdout, "\n\n                          pc    bp    sp    registers\n");
 	fprintf(opr, "Initial values:           %d     %d     %d  ", pc,bp,sp);
