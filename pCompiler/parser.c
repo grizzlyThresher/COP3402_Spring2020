@@ -296,7 +296,7 @@ int procdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 			return 1;
 		}
 
-		if (block(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr, curLexLevel, curProc) == 1) {
+		if (block(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr, curLexLevel + 1, curProc) == 1) {
  			return 1;
  		}
 
@@ -386,9 +386,29 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
 				return 1;
 			}
 
-			// Placeholder values for now, refer to this--
-			// addInstruction(code, CAL, 0, lvl, symbol->address, numInstructions, opr);
-			addInstruction(code, CAL, 0, 0, 0, numInstructions, opr);
+			symbol* curProc = findSymbol(*symbolTable, tokens[*curToken]->value, *numSymbols, opr);
+			if (curProc->kind == 1) {
+				fprintf(stderr, "Parsing Error 0%d at Line (%d): Procedure Expected, Constant Received.\n",
+			 	 procedureExpectedConstError, tokens[*curToken]->lineNum);
+				fprintf(opr, "Parsing Error 0%d at Line (%d): Procedure Expected, Constant Received.\n",
+			 	 procedureExpectedConstError, tokens[*curToken]->lineNum);
+
+				return 1;
+			} else if (curProc->kind == 2) {
+				fprintf(stderr, "Parsing Error 0%d at Line (%d): Procedure Expected, Variable Received.\n",
+			 	 procedureExpectedVarError, tokens[*curToken]->lineNum);
+				fprintf(opr, "Parsing Error 0%d at Line (%d): Procedure Expected, Variable Received.\n",
+			 	 procedureExpectedVarError, tokens[*curToken]->lineNum);
+
+				return 1;
+			}
+
+			addInstruction(code, CAL, 0, (curLexLevel - curProc->level), curProc->address, numInstructions, opr);
+
+			// If getToken encounters an error, end
+			if (getToken(curToken, numTokens, tokens, opr)) {
+ 				return 1;
+ 			}
 
  			break;
 
@@ -552,6 +572,11 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  				fprintf(opr, "Parsing Error 0%d at Line (%d): Cannot Reassign Value to Constant %s.\n",
 			 constReassignError, tokens[*curToken]->lineNum, curSym->name);
  				return 1;
+ 			} else if (curSym->kind == 3) {
+ 				fprintf(stderr, "Parsing Error 0%d at Line (%d): Cannot Reassign Value to Procedure %s.\n",
+			 procReassignError, tokens[*curToken]->lineNum, curSym->name);
+ 				fprintf(opr, "Parsing Error 0%d at Line (%d): Cannot Reassign Value to Procedure %s.\n",
+			 procReassignError, tokens[*curToken]->lineNum, curSym->name);
  			}
 
  			// Adds new instruction
@@ -570,23 +595,13 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			if (getToken(curToken, numTokens, tokens, opr)) {
  				return 1;
  			} // An error has been encountered, so end
- 			if (tokens[*curToken]->token != identsym) {
- 				// Prints an error to output file and console if an identifier was expected
- 				fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
-			 	 identifierExpectedError, tokens[*curToken]->lineNum);
- 				fprintf(opr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
-			 	 identifierExpectedError, tokens[*curToken]->lineNum);
-				return 1;
- 			}
-
- 			curSym = findSymbol(*symbolTable, tokens[*curToken]->value, *numSymbols, opr);
- 			// An error has been encountered, so end
- 			if (curSym == NULL) {
+ 			
+ 			// If expression encounters an error, end
+ 			if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  				return 1;
  			}
- 			// Adds new instruction
- 			addInstruction(code, LOD, 0, (curLexLevel - curSym->level), curSym->address, numInstructions, opr);
- 			addInstruction(code, SIO, 0, 0, 1, numInstructions, opr);
+
+ 			addInstruction(code, SIO, *curReg, 0, 1, numInstructions, opr);
 
  			// If getToken encounters an error, end
  			if (getToken(curToken, numTokens, tokens, opr)) {
@@ -795,9 +810,15 @@ int factor(instruction* code, symbol*** symbolTable, int* numSymbols,
 			if (curSym->kind == 1) {
 				// Adds new instruction
 				addInstruction(code, LIT, *curReg, 0, curSym->val, numInstructions, opr);
-			} else {
+			} else if (curSym->kind == 2){
 				// Adds new instruction
 				addInstruction(code, LOD, *curReg, (curLexLevel - curSym->level), curSym->address, numInstructions, opr);
+			} else {
+				fprintf(stderr, "Parsing Error 0%d at Line (%d): Cannot Use A Procedure Within An Expression.\n",
+			 	 procInExpressionError, tokens[*curToken]->lineNum);
+ 				fprintf(opr, "Parsing Error 0%d at Line (%d): Cannot Use A Procedure Within An Expression.\n",
+			 	 procInExpressionError, tokens[*curToken]->lineNum);
+				return 1;
 			}
 			break;
 		// If token is a number...
