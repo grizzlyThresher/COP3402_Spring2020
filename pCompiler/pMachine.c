@@ -30,6 +30,7 @@ void execute(instruction* code, FILE* opr, int printMachine, int printParse, int
     "lss", "leq", "gtr", "geq"};
 
     // Prints instructions to output file
+    fprintf(opr,"\n\n");
     for(int i = 0; i < numInstructions; i++) {
         makeBuffer(buffer, i, 7);
         fprintf(opr, "%d%s%s    %d   %d    %d \n", i, buffer,
@@ -38,6 +39,7 @@ void execute(instruction* code, FILE* opr, int printMachine, int printParse, int
 
     // Prints instructions to console IF printParse is active
     if (printParse == 1) {
+        fprintf(stdout,"\n\n");
         for(int i = 0; i < numInstructions; i++) {
             makeBuffer(buffer, i, 7);
             fprintf(stdout, "%d%s%s    %d   %d    %d \n", i, buffer,

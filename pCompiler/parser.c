@@ -60,6 +60,7 @@ int program(instruction* code, symbol*** symbolTable, int* numSymbols,
 int block(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr,
   int curLexLevel, symbol* curProc) {
+  	printf("Block be getting called\n");
 
 	// If the token is a constant...
  	if (tokens[*curToken]->token == constsym) {
@@ -259,11 +260,12 @@ int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 int procdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int curLexLevel) {
 	
-	do {
-
-		if (getToken(curToken, numTokens, tokens, opr)) {
+	if (getToken(curToken, numTokens, tokens, opr)) {
 			return 1;
 		}
+
+
+	do {
 
 		if (tokens[*curToken]->token != identsym) {
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected.\n",
@@ -300,10 +302,6 @@ int procdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
  			return 1;
  		}
 
- 		if (getToken(curToken, numTokens, tokens, opr)) {
-			return 1;
-		}
-
 		if (tokens[*curToken]->token != semicolonsym) {
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): Semicolon Expected\n",
 			 semicolonExpectedError, tokens[*curToken]->lineNum);
@@ -312,9 +310,15 @@ int procdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 			return 1;
 
 		}
+		// Adds new instruction
+ 			addInstruction(code, RET, 0, 0, 0, numInstructions, opr);
 
 		// Loop backwards through symbolTable and set mark = 1 for every symbol found until you reach the current procedure
 		deleteSymbols(*symbolTable, *numSymbols, curLexLevel, opr);
+
+		if (getToken(curToken, numTokens, tokens, opr)) {
+			return 1;
+		}
 
 	} while (tokens[*curToken]->token == procsym);
 
@@ -369,7 +373,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			}
 
  			// Adds new instruction
- 			addInstruction(code, STO, *curReg, 0, curSym->address, numInstructions, opr);
+ 			addInstruction(code, STO, *curReg, (curLexLevel - curSym->level), curSym->address, numInstructions, opr);
  			break;
 
  		case callsym:
@@ -471,10 +475,6 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
 
  			// If statement encounters an error, end
  			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
- 				return 1;
- 			}
-
- 			if (getToken(curToken, numTokens, tokens, opr)) {
  				return 1;
  			}
 
@@ -602,11 +602,6 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			}
 
  			addInstruction(code, SIO, *curReg, 0, 1, numInstructions, opr);
-
- 			// If getToken encounters an error, end
- 			if (getToken(curToken, numTokens, tokens, opr)) {
- 				return 1;
- 			}
 
  			break;
 
