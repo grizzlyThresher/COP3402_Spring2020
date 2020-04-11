@@ -17,8 +17,11 @@ instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructio
 	// If the parse ran successfully, return the generated code
 	if (program(code, &symbolTable, &numSymbols, tokens, numTokens, numInstructions, &curToken, opr) == 0) {
 		return code;
-	} else // Otherwise, return NULL
+	} else {
+
+	// Otherwise, return NULL
 		return NULL;
+	}
 }
 
 // Every non-terminal in the Language Grammar is represented by a function.
@@ -26,15 +29,21 @@ int program(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr) {
 
 	int firstInstruction;
+	int curLexLevel = 0;
 
 	// New thingy u said to add
 	addInstruction(code, JMP, 0, 0, 0, numInstructions, opr);
 
 	// If block returns 1, end
- 	if (block(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr, firstInstruction) == 1) {
+ 	if (block(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr, curLexLevel, NULL) == 1) {
  		return 1;
- 	} // If token is a . ...
+ 	}
+
+ 	
+
+ 	 // If token is a . ...
  	else if(tokens[*curToken]->token != periodsym) {
+
  		// Prints an error to output file and console if a period was expected
  		fprintf(stderr, "Parsing Error 0%d at Line (%d): Period Expected.\n",
  		 missingPeriodError, tokens[*curToken]->lineNum);
@@ -42,45 +51,59 @@ int program(instruction* code, symbol*** symbolTable, int* numSymbols,
  		 missingPeriodError, tokens[*curToken]->lineNum);
  		return 1;
  	} else {
- 		// Add new instruction
+
+ 		// Adds the HALT instruction
  		return addInstruction(code, SIO, 0, 0, 3, numInstructions, opr);
  	}
 }
 
 int block(instruction* code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int* firstInstruction) {
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr,
+  int curLexLevel, symbol* curProc) {
 
 	// If the token is a constant...
  	if (tokens[*curToken]->token == constsym) {
  		// If constdeclaration encounters an error, end
- 		if (constdeclaration(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr) == 1) {
+ 		if (constdeclaration(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr, curLexLevel) == 1) {
  			return 1;
  		}
  	}
+ 	int numVars = 0;
  	// If the token is a variable..
  	if (tokens[*curToken]->token == varsym) {
  		// If vardeclaration encounters an error, end
- 		if (vardeclaration(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr) == 1) {
+ 		if (vardeclaration(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr, &numVars, curLexLevel) == 1) {
  			return 1;
  		}
  	}
 
- 	if (tokens*[*curToken]->token == procsym) {
- 		if (procdeclaration(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr) == 1) {
+ 	if (tokens[*curToken]->token == procsym) {
+ 		if (procdeclaration(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr, curLexLevel) == 1) {
  			return 1;
  		}
  	}
 
- 	// Also new thingy
- 	*firstInstruction = *numInstructions
+ 	// Tells Program or Procdeclaration where the program/procedure properly starts
+ 	if (curProc == NULL) {
+ 		// Tells the program where to Jump on Start
+ 		code[0].m = *numInstructions;
+ 	} else {
+ 		// edits the symbol in the associated Procedure to have the proper address
+ 		curProc->address = *numInstructions;
+ 	}
+
+ 	// Adds variables just before starting to add the statement code. If in main only increments enough for variables
+ 	// If in a procedure, increments for variables plus Activation Record.
+ 	addInstruction(code, INC, 0, 0, numVars, numInstructions, opr);
+ 	
 
  	int curReg = 0;
 
-	return statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, &curReg, opr);
+	return statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, &curReg, opr, curLexLevel);
 }
 
 int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr) {
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int curLexLevel) {
 
 	char* curIdent;
 	char* curNum;
@@ -129,7 +152,7 @@ int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 		curNum = tokens[*curToken]->value;
 
 		// Adds new const to Symbol Table
-		added = addSymbol(symbolTable, numSymbols, 1, curIdent, curNum, -1, -1);
+		added = addSymbol(symbolTable, numSymbols, 1, curIdent, curNum, curLexLevel, -1);
 		if (added == identifierAlreadyConstError) {
 			// Prints an error to output file and console if the constant already exists
 			fprintf(stderr, "Parsing Error 0%d: const \"%s\" Already Exists.\n",
@@ -165,11 +188,19 @@ int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 }
 
 int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr) {
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr,
+  int* numVars, int curLexLevel) {
 
  	char* curIdent;
-	int numVars = 0;
+	int vars;
 	int added;
+
+	// If in a procedure, leave room for the activation record. If in main, just add the variable.
+	if (curLexLevel > 0) {
+		vars = *numVars + 4;
+	} else {
+		vars = *numVars;
+	}
 
 	do {
 
@@ -186,7 +217,7 @@ int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 			return 1;
 		}
 
-		added = addSymbol(symbolTable, numSymbols, 2, tokens[*curToken]->value, "0", 0, (numVars++) + 4);
+		added = addSymbol(symbolTable, numSymbols, 2, tokens[*curToken]->value, "0", curLexLevel, (vars++));
 		// An error has been encountered, so end
 		if (added == varAlreadyExistsError) {
 			// Prints an error to output file and console if the variable already exists
@@ -215,9 +246,8 @@ int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 		return 1;
 	}
 
-	// Add new instruction
-	addInstruction(code, INC, 0, 0, numVars + 4, numInstructions, opr);
-
+	
+	*numVars = vars;
 	// If getToken encounters an error, end
 	if (getToken(curToken, numTokens, tokens, opr)) {
 		return 1;
@@ -227,7 +257,7 @@ int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 }
 
 int procdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int* firstInstruction) {
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int curLexLevel) {
 	
 	do {
 
@@ -243,10 +273,17 @@ int procdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 			return 1;
 		}
 
+		// adds new procedure to the symbol table, initialized with address of 0, to be changed in block.
+		addSymbol(symbolTable, numSymbols, 3, tokens[*curToken]->value, "0", curLexLevel, 0);
+
+		// grabs the newly added symbol to be passed into block.
+		symbol* curProc = findSymbol(*symbolTable, tokens[*curToken]->value, *numSymbols, opr);
+
 		if (getToken(curToken, numTokens, tokens, opr)) {
 			return 1;
 		}
 
+		// ensures there's a semicolon after the declaration of the symbol.
 		if (tokens[*curToken]->token != semicolonsym) {
 			fprintf(stderr, "Parsing Error 0%d at Line (%d): Semicolon Expected\n",
 			 semicolonExpectedError, tokens[*curToken]->lineNum);
@@ -255,14 +292,11 @@ int procdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 			return 1;
 		}
 
-		// Do we need to get token before block???
 		if (getToken(curToken, numTokens, tokens, opr)) {
 			return 1;
 		}
 
-		// Increment cur lex lvl after we put proc in the symbol table and THEN call block, pass cur lex lvl
-
-		if (block(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr, firstInstruction) == 1) {
+		if (block(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr, curLexLevel, curProc) == 1) {
  			return 1;
  		}
 
@@ -280,13 +314,15 @@ int procdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 		}
 
 		// Loop backwards through symbolTable and set mark = 1 for every symbol found until you reach the current procedure
-	} while (tokens[*curToken]->token == procsym)
+		deleteSymbols(*symbolTable, *numSymbols, curLexLevel, opr);
+
+	} while (tokens[*curToken]->token == procsym);
 
 	return 0;
 }
 
 int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr) {
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr, int curLexLevel) {
 
 	int tmpInstruction, jmpInstruction;
 	symbol *curSym;
@@ -328,7 +364,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			if (getToken(curToken, numTokens, tokens, opr)) {
  				return 1;
  			} // If expression encounters an error, end
- 			if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+ 			if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  				return 1;
  			}
 
@@ -365,7 +401,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  				}
 
  				// If statement encounters an error, end
- 				if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+ 				if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  					return 1;
  				}
  			
@@ -392,10 +428,12 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			// If getToken encounters an error, end
  			if (getToken(curToken, numTokens, tokens, opr)) {
  				return 1;
- 			} // If condition encounters an error, end
- 			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+ 			}
+ 			 // If condition encounters an error, end
+ 			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  				return 1;
- 			} // An error has been encountered, so end
+ 			}
+ 			 // An error has been encountered, so end
  			if (tokens[*curToken]->token != thensym) {
  				// Prints an error to output file and console if "then" was expected
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): \"then\" Expected\n",
@@ -412,7 +450,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			addInstruction(code, JPC, 0, 0, 0, numInstructions, opr);
 
  			// If statement encounters an error, end
- 			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+ 			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  				return 1;
  			}
 
@@ -421,13 +459,31 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			}
 
  			if (tokens[*curToken]->token == elsesym) {
- 				// addInstruction(JMP, 0, 0, 0), reset JPC
- 				// New int to keep track of what the current instruction is
- 				// Jump to the end of the else statement
- 				// Get next token and call statement again
+
+ 				// if else block present, add a jump instruction to the end of if statement
+ 				// this allows the program to skip the else block if the condition is true
+ 				jmpInstruction = *numInstructions;
+ 				addInstruction(code, JMP, 0, 0, 0, numInstructions, opr);
+
+ 				code[tmpInstruction].m = (*numInstructions);
+
+ 				if (getToken(curToken, numTokens, tokens, opr)) {
+ 				return 1;
+ 				}
+
+ 				// If statement encounters an error, end
+ 				if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
+ 					return 1;
+ 				}
+
+ 				code[jmpInstruction].m = (*numInstructions);
+
+ 			} else {
+
+ 				code[tmpInstruction].m = (*numInstructions);
  			}
 
- 			code[tmpInstruction].m = (*numInstructions);
+ 			
  			break;
 
  		case whilesym:
@@ -437,7 +493,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			}
  			jmpInstruction = *numInstructions;
  			// If condition encounters an error, end
- 			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+ 			if (condition(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  				return 1;
  			} // An error has been encountered, so end
  			if (tokens[*curToken]->token != dosym) {
@@ -458,7 +514,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			addInstruction(code, JPC, 0, 0, 0, numInstructions, opr);
 
  			// If statement encounters an error, end
- 			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+ 			if (statement(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  				return 1;
  			}
 
@@ -500,7 +556,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
 
  			// Adds new instruction
  			addInstruction(code, SIO, 0, 0, 2, numInstructions, opr);
- 			addInstruction(code, STO, 0, 0, curSym->address, numInstructions, opr);
+ 			addInstruction(code, STO, 0, (curLexLevel - curSym->level), curSym->address, numInstructions, opr);
 
  			// If getToken encounters an error, end
  			if (getToken(curToken, numTokens, tokens, opr)) {
@@ -529,7 +585,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
  			// Adds new instruction
- 			addInstruction(code, LOD, 0, 0, curSym->address, numInstructions, opr);
+ 			addInstruction(code, LOD, 0, (curLexLevel - curSym->level), curSym->address, numInstructions, opr);
  			addInstruction(code, SIO, 0, 0, 1, numInstructions, opr);
 
  			// If getToken encounters an error, end
@@ -549,7 +605,7 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
 }
 
 int condition(instruction* code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr) {
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr, int curLexLevel) {
  	int tmpReg = *curReg;
  	// If the token is "odd"
  	if (tokens[*curToken]->token == oddsym) {
@@ -559,13 +615,13 @@ int condition(instruction* code, symbol*** symbolTable, int* numSymbols,
  		}
 
  		// Runs expression function using current token
- 		expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr);
+ 		expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel);
 
  		// Adds new instruction
  		addInstruction(code, ODD, tmpReg, 0, 0, numInstructions, opr);
  	} else {
  		// Runs expression function using current token
- 		expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr);
+ 		expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel);
 
  		op_code op;
  		// Switch case for op-code of token
@@ -604,7 +660,7 @@ int condition(instruction* code, symbol*** symbolTable, int* numSymbols,
  		*curReg = *curReg + 1;
 
  		// If expression encounters an error, end
- 		if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+ 		if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  			return 1;
  		}
 
@@ -619,7 +675,7 @@ int condition(instruction* code, symbol*** symbolTable, int* numSymbols,
 }
 
 int expression(instruction* code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr) {
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr, int curLexLevel) {
 
 	// Keeps track of register used at beginning of expresion
 	int tmpReg = *curReg;
@@ -643,7 +699,7 @@ int expression(instruction* code, symbol*** symbolTable, int* numSymbols,
  	}
 
  	// If term encounters an error, end
- 	if (term(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+ 	if (term(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  		return 1;
  	}
 
@@ -662,7 +718,7 @@ int expression(instruction* code, symbol*** symbolTable, int* numSymbols,
 
  		*curReg = *curReg + 1;
  		// If term encounters an error, end
- 		if (term(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+ 		if (term(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  			return 1;
  		}
 
@@ -681,12 +737,12 @@ int expression(instruction* code, symbol*** symbolTable, int* numSymbols,
 }
 
 int term(instruction* code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr) {
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr, int curLexLevel) {
 
 	// Keeps track of register used at beginning of term
 	int tmpReg = *curReg;
 	// If factor encounters an error, end
-	if (factor(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+	if (factor(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  		return 1;
  	}
 
@@ -703,7 +759,7 @@ int term(instruction* code, symbol*** symbolTable, int* numSymbols,
  		// Shifts current register
  		*curReg = *curReg + 1;
  		// If factor encounters an error, end
- 		if (factor(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+ 		if (factor(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  			return 1;
  		}
 
@@ -722,7 +778,7 @@ int term(instruction* code, symbol*** symbolTable, int* numSymbols,
 }
 
 int factor(instruction* code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr) {
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr, int curLexLevel) {
 
  	symbol* curSym;
 
@@ -741,7 +797,7 @@ int factor(instruction* code, symbol*** symbolTable, int* numSymbols,
 				addInstruction(code, LIT, *curReg, 0, curSym->val, numInstructions, opr);
 			} else {
 				// Adds new instruction
-				addInstruction(code, LOD, *curReg, 0, curSym->address, numInstructions, opr);
+				addInstruction(code, LOD, *curReg, (curLexLevel - curSym->level), curSym->address, numInstructions, opr);
 			}
 			break;
 		// If token is a number...
@@ -756,7 +812,7 @@ int factor(instruction* code, symbol*** symbolTable, int* numSymbols,
 			if (getToken(curToken, numTokens, tokens, opr)) {
 				return 1;
 			} // If expression encounters an error, end
-			if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr) == 1) {
+			if (expression(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, curReg, opr, curLexLevel) == 1) {
  				return 1;
  			}
 
@@ -828,15 +884,15 @@ symbol* findSymbol(symbol** symbolTable, char* name, int numSymbols, FILE* opr) 
 	return NULL;
 }
 
-// Method used to simplify symbol deactivation
-int deleteSymbol(symbol** symbolTable, char* name, int numSymbols, FILE* opr) {
-	symbol* removing = findSymbol(symbolTable, name, numSymbols, opr);
-	if (removing == NULL) 
-		return 1;
-	// Sets Symbol as no longer being used for code generation
-	removing->mark = 1;
+void deleteSymbols(symbol** symbolTable, int numSymbols, int curLexLevel, FILE* opr) {
 
-	return 0;
+	for (int i = numSymbols - 1; i >= 0; i--) {
+		if (symbolTable[i]->level > curLexLevel) {
+			symbolTable[i]->mark = 1;
+		} else {
+			break;
+		}
+	}
 }
 
 // Method used to add new instruction to the given code array

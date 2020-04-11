@@ -122,23 +122,24 @@ instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructio
 int program(instruction* code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr);
 int block(instruction* code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int* firstInstruction);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr,
+  int curLexLevel, symbol* curProc);
 int constdeclaration(instruction* code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int curLexLevel);
 int vardeclaration(instruction* code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int* numVars, int curLexLevel);
 int procdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int* firstInstruction);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int curLexLevel);
 int statement(instruction* code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr, int curLexLevel);
 int condition(instruction* code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr, int curLexLevel);
 int expression(instruction* code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr, int curLexLevel);
 int term(instruction* code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr, int curLexLevel);
 int factor(instruction* code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr, int curLexLevel);
 
 // Method used to add symbols to the symbol table
 int addSymbol(symbol*** symbolTabe, int* numSymbols, int kind, char* name, char* val, int level, int address);
@@ -147,7 +148,7 @@ int addSymbol(symbol*** symbolTabe, int* numSymbols, int kind, char* name, char*
 symbol* findSymbol(symbol** symbolTabe, char* name, int numSymbols, FILE* opr);
 
 // Method used to simplify symbol deactivation
-int deleteSymbol(symbol** symbolTabe, char* name, int numSymbols, FILE* opr);
+void deleteSymbols(symbol** symbolTable, int numSymbols, int curLexLevel, FILE* opr);
 
 // Method used for adding instructions during code generation
 int addInstruction(instruction* code, op_code op, int r, int l, int m, int* numInstructions, FILE* opr);
