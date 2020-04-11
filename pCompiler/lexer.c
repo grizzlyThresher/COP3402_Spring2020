@@ -178,29 +178,35 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 							addError(buffer, invalidIdentifierError, numLines);
 						}
 					} else if (strcmp(buffer,  "odd") == 0) { // String read in is "odd", valid string
-						addLexeme(&lexemes,buffer, oddsym, numLines);
+						addLexeme(buffer, oddsym);
 					} else if (strcmp(buffer, "begin") == 0) { // String read in is "begin", valid string
-						addLexeme(&lexemes,buffer, beginsym, numLines);
+						addLexeme(buffer, beginsym);
 					} else if (strcmp(buffer, "end") == 0) { // String read in is "end", valid string
-						addLexeme(&lexemes,buffer, endsym, numLines);
+						addLexeme(buffer, endsym);
 					} else if (strcmp(buffer, "if") == 0) { // String read in is "if", valid string
-						addLexeme(&lexemes,buffer, ifsym, numLines);
+						addLexeme(buffer, ifsym);
 					} else if (strcmp(buffer, "then") == 0) { // String read in is "then", valid string
-						addLexeme(&lexemes,buffer, thensym, numLines);
+						addLexeme(buffer, thensym);
 					} else if (strcmp(buffer, "while") == 0) { // String read in is "while", valid string
-						addLexeme(&lexemes,buffer, whilesym, numLines);
+						addLexeme(buffer, whilesym);
 					} else if (strcmp(buffer, "do") == 0) { // String read in is "do", valid string
-						addLexeme(&lexemes,buffer, dosym, numLines);
+						addLexeme(buffer, dosym);
+					} else if (strcmp(buffer, "call") == 0) { // String read in is "call", valid string
+						addLexeme(buffer, callsym);
 					} else if (strcmp(buffer, "const") == 0) { // String read in is "const", valid string
-						addLexeme(&lexemes,buffer, constsym, numLines);
+						addLexeme(buffer, constsym);
 					} else if (strcmp(buffer, "var") == 0) { // String read in is "var", valid string
-						addLexeme(&lexemes,buffer, varsym, numLines);
+						addLexeme(buffer, varsym);
+					} else if (strcmp(buffer, "procedure") == 0) { // String read in is "procedure", valid string
+						addLexeme(buffer, procsym);
 					} else if (strcmp(buffer, "write") == 0) { // String read in is "write", valid string
-						addLexeme(&lexemes,buffer, writesym, numLines);
+						addLexeme(buffer, writesym);
 					} else if (strcmp(buffer, "read") == 0) { // String read in is "read", valid string
-						addLexeme(&lexemes,buffer, readsym, numLines);
+						addLexeme(buffer, readsym);
+					} else if (strcmp(buffer, "else") == 0) { // String read in is "else", valid string
+						addLexeme(buffer, elsesym);
 					} else { // String read in is a new valid variable
-						addLexeme(&lexemes,buffer, identsym, numLines);
+						addLexeme(buffer, identsym);
 					}
 					varLength = 0; // Resets buffer back to empty in preparation for next pass through the lexer
 					buffer = realloc(buffer, varLength * sizeof(char));
