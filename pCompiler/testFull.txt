@@ -1,0 +1,31 @@
+const a = 2, b = 7;
+var x, y, z;
+begin
+	read x;
+	if x < a then
+	y := x;
+
+	y := b - y;
+	while y > z do 
+	z := z + 1;
+
+	write z;
+
+	if odd b then begin
+	x := a * 5;
+	y := x / 2;
+	if x <> y then
+		z := 10;
+	end;
+
+	if z = x then
+	z := 9;
+
+	while z <= x do
+	z := z + 1;
+
+	while z >= y do
+	z := z - 3;
+
+end.
+
