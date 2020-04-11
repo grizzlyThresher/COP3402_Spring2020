@@ -198,7 +198,7 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum) {
 					} else if (strcmp(buffer, "var") == 0) { // String read in is "var", valid string
 						addLexeme(&lexemes,buffer, varsym, numLines);
 					} else if (strcmp(buffer, "procedure") == 0) { // String read in is "procedure", valid string
-						addLexeme(buffer, procsym);
+						addLexeme(&lexemes,buffer, procsym);
 					} else if (strcmp(buffer, "write") == 0) { // String read in is "write", valid string
 						addLexeme(&lexemes,buffer, writesym, numLines);
 					} else if (strcmp(buffer, "read") == 0) { // String read in is "read", valid string
