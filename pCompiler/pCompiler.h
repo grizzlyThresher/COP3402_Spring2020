@@ -107,7 +107,7 @@ lexeme** lex(FILE* ipr, FILE* opr, int toConsole, int* tokenNum);
 
 // struct used to represent an element of the symbol table in the parser
 typedef struct{
-	int kind;	// const = 1, var = 2
+	int kind;	// const = 1, var = 2, procedure = 3
 	char* name;	// name of identifier
 	int val;	// number value of symbol
 	int level;	// lexicographical level of symbol
@@ -122,11 +122,13 @@ instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructio
 int program(instruction* code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr);
 int block(instruction* code, symbol*** symbolTabe, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr);
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int* firstInstruction);
 int constdeclaration(instruction* code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr);
 int vardeclaration(instruction* code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr);
+int procdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int* firstInstruction);
 int statement(instruction* code, symbol*** symbolTabe, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr);
 int condition(instruction* code, symbol*** symbolTabe, int* numSymbols,

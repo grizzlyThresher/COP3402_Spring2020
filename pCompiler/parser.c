@@ -25,8 +25,13 @@ instruction* parse(lexeme** tokens, int numTokens, FILE* opr, int* numInstructio
 int program(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr) {
 
+	int firstInstruction;
+
+	// New thingy u said to add
+	addInstruction(code, JMP, 0, 0, 0, numInstructions, opr);
+
 	// If block returns 1, end
- 	if (block(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr) == 1) {
+ 	if (block(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr, firstInstruction) == 1) {
  		return 1;
  	} // If token is a . ...
  	else if(tokens[*curToken]->token != periodsym) {
@@ -43,7 +48,7 @@ int program(instruction* code, symbol*** symbolTable, int* numSymbols,
 }
 
 int block(instruction* code, symbol*** symbolTable, int* numSymbols,
- lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr) {
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int* firstInstruction) {
 
 	// If the token is a constant...
  	if (tokens[*curToken]->token == constsym) {
@@ -59,6 +64,15 @@ int block(instruction* code, symbol*** symbolTable, int* numSymbols,
  			return 1;
  		}
  	}
+
+ 	if (tokens*[*curToken]->token == procsym) {
+ 		if (procdeclaration(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr) == 1) {
+ 			return 1;
+ 		}
+ 	}
+
+ 	// Also new thingy
+ 	*firstInstruction = *numInstructions
 
  	int curReg = 0;
 
@@ -146,6 +160,7 @@ int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 	if (getToken(curToken, numTokens, tokens, opr)) {
 		return 1;
 	}
+
 	return 0;
 }
 
@@ -211,6 +226,65 @@ int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 	return 0;
 }
 
+int procdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
+ lexeme** tokens, int numTokens, int* numInstructions, int* curToken, FILE* opr, int* firstInstruction) {
+	
+	do {
+
+		if (getToken(curToken, numTokens, tokens, opr)) {
+			return 1;
+		}
+
+		if (tokens[*curToken]->token != identsym) {
+			fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected.\n",
+			 identifierExpectedError, tokens[*curToken]->lineNum);
+			fprintf(opr, "Parsing Error 0%d at Line (%d): Identifier Expected.\n",
+			 identifierExpectedError, tokens[*curToken]->lineNum);
+			return 1;
+		}
+
+		if (getToken(curToken, numTokens, tokens, opr)) {
+			return 1;
+		}
+
+		if (tokens[*curToken]->token != semicolonsym) {
+			fprintf(stderr, "Parsing Error 0%d at Line (%d): Semicolon Expected\n",
+			 semicolonExpectedError, tokens[*curToken]->lineNum);
+			fprintf(opr, "Parsing Error 0%d at Line (%d): Semicolon Expected\n",
+			 semicolonExpectedError, tokens[*curToken]->lineNum);
+			return 1;
+		}
+
+		// Do we need to get token before block???
+		if (getToken(curToken, numTokens, tokens, opr)) {
+			return 1;
+		}
+
+		// Increment cur lex lvl after we put proc in the symbol table and THEN call block, pass cur lex lvl
+
+		if (block(code, symbolTable, numSymbols, tokens, numTokens, numInstructions, curToken, opr, firstInstruction) == 1) {
+ 			return 1;
+ 		}
+
+ 		if (getToken(curToken, numTokens, tokens, opr)) {
+			return 1;
+		}
+
+		if (tokens[*curToken]->token != semicolonsym) {
+			fprintf(stderr, "Parsing Error 0%d at Line (%d): Semicolon Expected\n",
+			 semicolonExpectedError, tokens[*curToken]->lineNum);
+			fprintf(opr, "Parsing Error 0%d at Line (%d): Semicolon Expected\n",
+			 semicolonExpectedError, tokens[*curToken]->lineNum);
+			return 1;
+
+		}
+
+		// Loop backwards through symbolTable and set mark = 1 for every symbol found until you reach the current procedure
+	} while (tokens[*curToken]->token == procsym)
+
+	return 0;
+}
+
 int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  lexeme** tokens, int numTokens, int* numInstructions, int* curToken, int* curReg, FILE* opr) {
 
@@ -261,6 +335,27 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			// Adds new instruction
  			addInstruction(code, STO, *curReg, 0, curSym->address, numInstructions, opr);
  			break;
+
+ 		case callsym:
+
+ 			if (getToken(curToken, numTokens, tokens, opr)) {
+ 				return 1;
+ 			}
+
+ 			if (tokens[*curToken]->token != identsym) {
+				fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected.\n",
+			 	 identifierExpectedError, tokens[*curToken]->lineNum);
+				fprintf(opr, "Parsing Error 0%d at Line (%d): Identifier Expected.\n",
+			 	 identifierExpectedError, tokens[*curToken]->lineNum);
+				return 1;
+			}
+
+			// Placeholder values for now, refer to this--
+			// addInstruction(code, CAL, 0, lvl, symbol->address, numInstructions, opr);
+			addInstruction(code, CAL, 0, 0, 0, numInstructions, opr);
+
+ 			break;
+
  		case beginsym:
  			
  			do {
@@ -321,6 +416,17 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  				return 1;
  			}
 
+ 			if (getToken(curToken, numTokens, tokens, opr)) {
+ 				return 1;
+ 			}
+
+ 			if (tokens[*curToken]->token == elsesym) {
+ 				// addInstruction(JMP, 0, 0, 0), reset JPC
+ 				// New int to keep track of what the current instruction is
+ 				// Jump to the end of the else statement
+ 				// Get next token and call statement again
+ 			}
+
  			code[tmpInstruction].m = (*numInstructions);
  			break;
 
@@ -366,7 +472,9 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			// If getToken encounters an error, end
  			if (getToken(curToken, numTokens, tokens, opr)) {
  				return 1;
- 			} // An error has been encountered, so end
+ 			} 
+
+ 			// An error has been encountered, so end
  			if (tokens[*curToken]->token != identsym) {
  				// Prints an error to output file and console if an identifier was expected
  				fprintf(stderr, "Parsing Error 0%d at Line (%d): Identifier Expected\n",
