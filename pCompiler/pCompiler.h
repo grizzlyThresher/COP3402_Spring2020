@@ -73,7 +73,9 @@ typedef enum {
 	doExpectedError, relopExpectedError, constReassignError, 
 	becomesExpectedError, invalidExpressionError, incompleteProgramError,
 	procedureExpectedConstError, procedureExpectedVarError,
-	procInExpressionError, procReassignError
+	procInExpressionError, procReassignError, varAlreadyExistsAsConstError,
+	procedureDoesntExistError, variableDoesntExistError,
+	procedureAlreadyExistsError
 } error_type;
 
 // struct used to store errors to be printed at a later time
@@ -147,7 +149,7 @@ int factor(instruction* code, symbol*** symbolTabe, int* numSymbols,
 int addSymbol(symbol*** symbolTabe, int* numSymbols, int kind, char* name, char* val, int level, int address);
 
 // Method used for symbol lookup
-symbol* findSymbol(symbol** symbolTabe, char* name, int numSymbols, FILE* opr);
+symbol* findSymbol(symbol** symbolTabe, char* name, int kind, int numSymbols, FILE* opr);
 
 // Method used to simplify symbol deactivation
 void deleteSymbols(symbol** symbolTable, int numSymbols, int curLexLevel, FILE* opr);
