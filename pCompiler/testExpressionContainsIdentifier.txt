@@ -1,0 +1,5 @@
+var a;
+prcoedure fact;
+begin
+a:=1+fact;
+end.
