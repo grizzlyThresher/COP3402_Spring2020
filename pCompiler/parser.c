@@ -39,22 +39,9 @@ int program(instruction* code, symbol*** symbolTable, int* numSymbols,
  		return 1;
  	}
 
- 	
-
- 	 // If token is a . ...
- 	else if(tokens[*curToken]->token != periodsym) {
-
- 		// Prints an error to output file and console if a period was expected
- 		fprintf(stderr, "Parsing Error %d at Line (%d): Period Expected.\n",
- 		 missingPeriodError, tokens[*curToken]->lineNum);
- 		fprintf(opr, "Parsing Error %d at Line (%d): Period Expected.\n",
- 		 missingPeriodError, tokens[*curToken]->lineNum);
- 		return 1;
- 	} else {
-
- 		// Adds the HALT instruction
- 		return addInstruction(code, SIO, 0, 0, 3, numInstructions, opr);
- 	}
+ 	// Adds the HALT instruction
+ 	return addInstruction(code, SIO, 0, 0, 3, numInstructions, opr);
+ 
 }
 
 int block(instruction* code, symbol*** symbolTable, int* numSymbols,
@@ -173,9 +160,9 @@ int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 	// An error has been encountered, so end
 	if (tokens[*curToken]->token != semicolonsym) {
 		// Prints an error to output file and console if a semicolon was expected
-		fprintf(stderr, "Parsing Error %d at Line (%d): Semicolon Expected\n",
+		fprintf(stderr, "Parsing Error %d at Line (%d): Semicolon or Comma Expected\n",
 			 semicolonExpectedError, tokens[*curToken]->lineNum);
-		fprintf(opr, "Parsing Error %d at Line (%d): Semicolon Expected\n",
+		fprintf(opr, "Parsing Error %d at Line (%d): Semicolon or Comma Expected\n",
 			 semicolonExpectedError, tokens[*curToken]->lineNum);
 		return 1;
 	}
@@ -246,11 +233,13 @@ int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 	// An error has been encountered, so end
 	if (tokens[*curToken]->token != semicolonsym) {
 		// Prints an error to output file and console if a semicolon was expected
-		fprintf(stderr, "Parsing Error %d at Line (%d): Semicolon Expected\n",
+		fprintf(stderr, "Parsing Error %d at Line (%d): Semicolon or Comma Expected\n",
 			 semicolonExpectedError, tokens[*curToken]->lineNum);
-		fprintf(opr, "Parsing Error %d at Line (%d): Semicolon Expected\n",
+		fprintf(opr, "Parsing Error %d at Line (%d): Semicolon or Comma Expected\n",
 			 semicolonExpectedError, tokens[*curToken]->lineNum);
+		
 		return 1;
+
 	}
 
 	
@@ -407,16 +396,16 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
 
 			symbol* curProc = findSymbol(*symbolTable, tokens[*curToken]->value, 3, *numSymbols, opr);
 			if (curProc->kind == 1) {
-				fprintf(stderr, "Parsing Error %d at Line (%d): Received symbol \"%s\" is a Constant, not a Procedure.\n",
+				fprintf(stderr, "Parsing Error %d at Line (%d): Received identifier \"%s\" is a Constant, not a Procedure.\n",
 			 	 procedureExpectedConstError, tokens[*curToken]->lineNum, curProc->name);
-				fprintf(opr, "Parsing Error %d at Line (%d): Received symbol \"%s\" is a Constant, not a Procedure.\n",
+				fprintf(opr, "Parsing Error %d at Line (%d): Received identifier \"%s\" is a Constant, not a Procedure.\n",
 			 	 procedureExpectedConstError, tokens[*curToken]->lineNum, curProc->name);
 
 				return 1;
 			} else if (curProc->kind == 2) {
-				fprintf(stderr, "Parsing Error %d at Line (%d): Received symbol \"%s\" is a Variable, not a Procedure.\n",
+				fprintf(stderr, "Parsing Error %d at Line (%d): Received identifier \"%s\" is a Variable, not a Procedure.\n",
 			 	 procedureExpectedVarError, tokens[*curToken]->lineNum, curProc->name);
-				fprintf(opr, "Parsing Error %d at Line (%d): Received symbol \"%s\" is a Variable, not a Procedure.\n",
+				fprintf(opr, "Parsing Error %d at Line (%d): Received identifier \"%s\" is a Variable, not a Procedure.\n",
 			 	 procedureExpectedVarError, tokens[*curToken]->lineNum, curProc->name);
 
 				return 1;
@@ -450,9 +439,9 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			// An error has been encountered, so end
  			if (tokens[*curToken]->token != endsym) {
  				// Prints an error to output file and console if "end" was expected
- 				fprintf(stderr, "Parsing Error %d at Line (%d): \"end\" Expected.\n",
+ 				fprintf(stderr, "Parsing Error %d at Line (%d): \"end\" Expected or Statement Missing Semicolon.\n",
 			 endExpectedError, tokens[*curToken]->lineNum);
- 				fprintf(opr, "Parsing Error %d at Line (%d): \"end\" Expected.\n",
+ 				fprintf(opr, "Parsing Error %d at Line (%d): \"end\" Expected or Statement Missing Semicolon.\n",
 			 endExpectedError, tokens[*curToken]->lineNum);
  				return 1;
  			}
@@ -997,11 +986,19 @@ int getToken(int *curToken, int numTokens, lexeme **tokens, FILE* opr) {
 	int failed = *curToken >= numTokens;
 	// An error has been encountered
 	if (failed) {
-		// Prints an error to output file and console if the program ends abruptly
-		fprintf(stderr, "Parsing Error %d at Line(%d): Incomplete Program Ends Abruptly.\n",
-		 incompleteProgramError, tokens[*curToken - 1]->lineNum);
-		fprintf(opr, "Parsing Error %d at Line(%d): Incomplete Program Ends Abruptly.\n",
-		 incompleteProgramError, tokens[*curToken - 1]->lineNum);
+		if(tokens[*curToken - 1]->token == endsym) {
+			// Prints an error to output file and console if a period was expected
+ 			fprintf(stderr, "Parsing Error %d at Line (%d): Period Expected.\n",
+ 			 missingPeriodError, tokens[*curToken-1]->lineNum);
+ 			fprintf(opr, "Parsing Error %d at Line (%d): Period Expected.\n",
+ 		 	 missingPeriodError, tokens[*curToken-1]->lineNum);
+ 		} else {
+			// Prints an error to output file and console if the program ends abruptly
+			fprintf(stderr, "Parsing Error %d at Line(%d): Incomplete Program Ends Abruptly.\n",
+			 incompleteProgramError, tokens[*curToken - 1]->lineNum);
+			fprintf(opr, "Parsing Error %d at Line(%d): Incomplete Program Ends Abruptly.\n",
+			 incompleteProgramError, tokens[*curToken - 1]->lineNum);
+		}
 	}
 
 	return failed;
