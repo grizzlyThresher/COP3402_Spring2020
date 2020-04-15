@@ -352,17 +352,18 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			// An error has been encountered, so end
  			} else if (curSym->kind == 1) {
  				// Prints an error to output file and console if trying to reassign a constant
- 				fprintf(stderr, "Parsing Error %d at Line (%d): Cannot Reassign Constant %s.\n",
+ 				fprintf(stderr, "Parsing Error %d at Line (%d): Cannot Reassign Constant \"%s\".\n",
 			 constReassignError, tokens[*curToken]->lineNum, curSym->name);
- 				fprintf(opr, "Parsing Error %d at Line (%d): Cannot Reassign Constant %s.\n",
+ 				fprintf(opr, "Parsing Error %d at Line (%d): Cannot Reassign Constant \"%s\".\n",
 			 constReassignError, tokens[*curToken]->lineNum, curSym->name);
  				return 1;
  			} else if (curSym->kind == 3) {
  				// Prints an error to output file and console if trying to reassign a procedure
- 				fprintf(stderr, "Parsing Error %d at Line (%d): Cannot Reassign Procedure %s.\n",
+ 				fprintf(stderr, "Parsing Error %d at Line (%d): Cannot Reassign Procedure \"%s\".\n",
 			 procReassignError, tokens[*curToken]->lineNum, curSym->name);
- 				fprintf(opr, "Parsing Error %d at Line (%d): Cannot Reassign Procedure %s.\n",
+ 				fprintf(opr, "Parsing Error %d at Line (%d): Cannot Reassign Procedure \"%s\".\n",
 			 procReassignError, tokens[*curToken]->lineNum, curSym->name);
+ 				return 1;
  			}
 
  			// If getToken encounters an error, end
@@ -581,17 +582,18 @@ int statement(instruction* code, symbol*** symbolTable, int* numSymbols,
  			} // An error has been encountered, so end
  			else if (curSym->kind == 1) {
  				// Prints an error to output file and console if trying to reassign a constant
- 				fprintf(stderr, "Parsing Error %d at Line (%d): Cannot Reassign Constant %s.\n",
+ 				fprintf(stderr, "Parsing Error %d at Line (%d): Cannot Reassign Constant \"%s\".\n",
 			 constReassignError, tokens[*curToken]->lineNum, curSym->name);
- 				fprintf(opr, "Parsing Error %d at Line (%d): Cannot Reassign Constant %s.\n",
+ 				fprintf(opr, "Parsing Error %d at Line (%d): Cannot Reassign Constant \"%s\".\n",
 			 constReassignError, tokens[*curToken]->lineNum, curSym->name);
  				return 1;
  			} else if (curSym->kind == 3) {
  				// Prints an error to output file and console if trying to reassign a procedure
- 				fprintf(stderr, "Parsing Error %d at Line (%d): Cannot Reassign Procedure %s.\n",
+ 				fprintf(stderr, "Parsing Error %d at Line (%d): Cannot Reassign Procedure \"%s\".\n",
 			 procReassignError, tokens[*curToken]->lineNum, curSym->name);
- 				fprintf(opr, "Parsing Error %d at Line (%d): Cannot Reassign Procedure %s.\n",
+ 				fprintf(opr, "Parsing Error %d at Line (%d): Cannot Reassign Procedure \"%s\".\n",
 			 procReassignError, tokens[*curToken]->lineNum, curSym->name);
+ 				return 1;
  			}
 
  			// Adds new instruction
