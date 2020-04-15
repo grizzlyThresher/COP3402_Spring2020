@@ -6,7 +6,7 @@ begin
   n:= n-1;
    if n = 0 then 
    f := 1;
-    if n > 0 then
+    else
      call fact;
 
       f:=f*ans1;
