@@ -1,5 +1,5 @@
 var a;
-prcoedure fact;
+procedure fact;
 begin
 a:=1+fact;
 end.
