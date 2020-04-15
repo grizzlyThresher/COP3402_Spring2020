@@ -155,11 +155,11 @@ int constdeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 		// Adds new const to Symbol Table
 		added = addSymbol(symbolTable, numSymbols, 1, curIdent, curNum, curLexLevel, -1);
 		if (added == identifierAlreadyConstError) {
-			// Prints an error to output file and console if the constant already exists
-			fprintf(stderr, "Parsing Error %d: const \"%s\" Already Exists.\n",
-			 constAlreadyExists, curIdent);
-			fprintf(opr, "Parsing Error %d: const \"%s\" Already Exists.\n",
-			 constAlreadyExists, curIdent);
+			fprintf(stderr, "Parsing Error %d at Line (%d): Constant \"%s\" already exists within the current scope.\n",
+			 identifierAlreadyConstError, tokens[*curToken]->lineNum, tokens[*curToken]->value);
+			fprintf(opr, "Parsing Error %d at Line (%d): Constant \"%s\" already exists within the current scope.\n",
+			 identifierAlreadyConstError, tokens[*curToken]->lineNum, tokens[*curToken]->value);
+			return 1;
 		}
 
 		// If getToken encounters an error, end
@@ -220,18 +220,18 @@ int vardeclaration(instruction* code, symbol*** symbolTable, int* numSymbols,
 
 		added = addSymbol(symbolTable, numSymbols, 2, tokens[*curToken]->value, "0", curLexLevel, (vars++));
 		// An error has been encountered, so end
-		if (added == varAlreadyExistsError) {
+		if (added == identifierAlreadyVarError) {
 			// Prints an error to output file and console if the variable already exists
-			fprintf(stderr, "Parsing Error %d at Line (%d): Variable \"%s\" already exists.\n",
-			 varAlreadyExistsError, tokens[*curToken]->lineNum, tokens[*curToken]->value);
-			fprintf(opr, "Parsing Error %d at Line (%d): Variable \"%s\" already exists.\n",
-			 varAlreadyExistsError, tokens[*curToken]->lineNum, tokens[*curToken]->value);
+			fprintf(stderr, "Parsing Error %d at Line (%d): Variable \"%s\" already exists within the current scope.\n",
+			 identifierAlreadyVarError, tokens[*curToken]->lineNum, tokens[*curToken]->value);
+			fprintf(opr, "Parsing Error %d at Line (%d): Variable \"%s\" already exists within the current scope.\n",
+			 identifierAlreadyVarError, tokens[*curToken]->lineNum, tokens[*curToken]->value);
 			return 1;
 		} else if (added == identifierAlreadyConstError) {
-			fprintf(stderr, "Parsing Error %d at Line (%d): Variable cannot have same name as Constant.\n",
-			 varAlreadyExistsAsConstError, tokens[*curToken]->lineNum);
-			fprintf(opr, "Parsing Error %d at Line (%d): Variable cannot have same name as Constant.\n",
-			 varAlreadyExistsAsConstError, tokens[*curToken]->lineNum);
+			fprintf(stderr, "Parsing Error %d at Line (%d): Constant \"%s\" already exists within the current scope.\n",
+			 identifierAlreadyConstError, tokens[*curToken]->lineNum, tokens[*curToken]->value);
+			fprintf(opr, "Parsing Error %d at Line (%d): Constant \"%s\" already exists within the current scope.\n",
+			 identifierAlreadyConstError, tokens[*curToken]->lineNum, tokens[*curToken]->value);
 			return 1;
 		}
 
@@ -882,17 +882,21 @@ int addSymbol(symbol*** symbolTable, int* numSymbols, int kind, char* name, char
 		if (kind == 3) {
 			if (symbolTable[0][i]->kind == 3 && 
 				symbolTable[0][i]->mark == 0 && 
-				(strcmp(symbolTable[0][i]->name, name) == 0) &&
-				level == symbolTable[0][i]->level) {
+				symbolTable[0][i]->level == level &&
+				(strcmp(symbolTable[0][i]->name, name) == 0)) {
 
 				return procedureAlreadyExistsError;
+
 			}
 		} else {
-			if (symbolTable[0][i]->mark == 0 && (strcmp(symbolTable[0][i]->name, name) == 0)) {
+			if (symbolTable[0][i]->mark == 0 &&
+			 symbolTable[0][i]->level == level &&
+			 symbolTable[0][i]->kind != 3 &&
+			 (strcmp(symbolTable[0][i]->name, name) == 0)) {
 				if (symbolTable[0][i]->kind == 1) {
 					return identifierAlreadyConstError;
-				} else if (symbolTable[0][i]->level == level) {
-					return varAlreadyExistsError;
+				} else if (symbolTable[0][i]->kind == 2) {
+					return identifierAlreadyVarError;
 				}
 			}
 		}
@@ -940,16 +944,16 @@ symbol* findSymbol(symbol** symbolTable, char* name, int kind, int numSymbols, F
 
 	if (kind == 3) {
 		// Prints an error to output file and console if the procedure being searched for does not exist
-		fprintf(stderr, "Parsing Error %d: Procedure \"%s\" Does Not Exist.\n", procedureDoesntExistError, name);
-		fprintf(opr, "Parsing Error %d: Procedure \"%s\" Does Not Exist.\n", procedureDoesntExistError, name);
+		fprintf(stderr, "Parsing Error %d: Procedure \"%s\" Does Not Exist Within Current Scope.\n", procedureDoesntExistError, name);
+		fprintf(opr, "Parsing Error %d: Procedure \"%s\" Does Not Exist Within Current Scope.\n", procedureDoesntExistError, name);
 	} else if (kind == 2) {
 		// Prints an error to output file and console if the variablebeing searched for does not exist
-		fprintf(stderr, "Parsing Error %d: Variable \"%s\" Does Not Exist.\n", variableDoesntExistError, name);
-		fprintf(opr, "Parsing Error %d: Variable \"%s\" Does Not Exist.\n", variableDoesntExistError, name);
+		fprintf(stderr, "Parsing Error %d: Variable \"%s\" Does Not Exist Within Current Scope.\n", variableDoesntExistError, name);
+		fprintf(opr, "Parsing Error %d: Variable \"%s\" Does Not Exist Within Current Scope.\n", variableDoesntExistError, name);
 	} else {
 		// Prints an error to output file and console if the variable or constant being searched for does not exist
-		fprintf(stderr, "Parsing Error %d: Identifier \"%s\" Does Not Exist.\n", identifierDoesntExistError, name);
-		fprintf(opr, "Parsing Error %d: Identifier \"%s\" Does Not Exist.\n", identifierDoesntExistError, name);
+		fprintf(stderr, "Parsing Error %d: Identifier \"%s\" Does Not Exist Within Current Scope.\n", identifierDoesntExistError, name);
+		fprintf(opr, "Parsing Error %d: Identifier \"%s\" Does Not Exist Within Current Scope.\n", identifierDoesntExistError, name);
 	}
 	
 

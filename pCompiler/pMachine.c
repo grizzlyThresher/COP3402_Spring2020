@@ -265,7 +265,7 @@ void printState(int* stack, int curLoc, instruction ir, int pc, int bp, int sp, 
     int lineCnt = lex;
 
 	for (int i = 1; i <= sp; i++) {
-        if (lineCnt > 0 && i == base(stack, lineCnt - 1, bp)) {
+        if (lineCnt > 0 && i == dynamicBase(stack, lineCnt - 1, bp)) {
             fprintf(output, "| %d ", stack[i]);
             if(printMachine == 1) fprintf(stdout, "| %d ", stack[i]);
             lineCnt--;
@@ -300,11 +300,20 @@ void makeBuffer(char *str, int num, int maxSize) {
         }
         str[offset] = '\0';
 }
-// Method used to redefine base in terms of requested lexicographical level
+// Method used to redefine base in terms of requested lexicographical level by static link
 int base(int* stack, int l, int base) {
 	int b1 = base;
 	while (l-- > 0) {
 		b1 = stack[b1 + 1];
 	}
 	return b1;
+}
+// Method used to redefine base in terms of requested lexicographical level by dynamic link
+// Used only for Printing Purposes
+int dynamicBase(int* stack, int l, int base) {
+int b1 = base;
+    while (l-- > 0) {
+        b1 = stack[b1 + 2];
+    }
+    return b1;
 }

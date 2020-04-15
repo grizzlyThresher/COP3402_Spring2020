@@ -39,6 +39,9 @@ void printState(int* stack, int curLoc, instruction ir, int pc, int bp, int sp, 
 void makeBuffer(char *str, int num, int maxSize);
 // Method used to redefine base
 int base(int* stack, int l, int base);
+// Method used to redefine base in terms of requested lexicographical level by dynamic link
+// Used only for Printing Purposes
+int dynamicBase(int* stack, int l, int base);
 // Method used to export the Virtual Machine running to the compiler
 void execute(instruction* code, FILE* opr, int printMachine, int printParse, int numInstructions);
 
@@ -66,14 +69,14 @@ typedef enum token_type {
 typedef enum {
 	numLengthError = 1, varLengthError, invalidSymbolError,
 	invalidIdentifierError, openCommentError, missingPeriodError,
-	identifierAlreadyConstError, varAlreadyExistsError,
+	identifierAlreadyConstError, identifierAlreadyVarError,
 	identifierDoesntExistError, identifierExpectedError,
 	semicolonExpectedError, eqlExpectedError, numberExpectedError,
 	constAlreadyExists, endExpectedError, thenExpectedError,
 	doExpectedError, relopExpectedError, constReassignError, 
 	becomesExpectedError, invalidExpressionError, incompleteProgramError,
 	procedureExpectedConstError, procedureExpectedVarError,
-	procInExpressionError, procReassignError, varAlreadyExistsAsConstError,
+	procInExpressionError, procReassignError,
 	procedureDoesntExistError, variableDoesntExistError,
 	procedureAlreadyExistsError
 } error_type;
